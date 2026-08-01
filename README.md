@@ -31,7 +31,7 @@ Or add it to an MCP host:
 
 ## Tools
 
-All ten are read-only; this server has no write path.
+All thirteen are read-only; this server has no write path.
 
 | Tool | What it does |
 | --- | --- |
@@ -42,6 +42,9 @@ All ten are read-only; this server has no write path.
 | `maxpreps_get_schedule` | Games with results and scores, plus a computed record |
 | `maxpreps_get_roster` | Players with jersey, class, positions, height, weight |
 | `maxpreps_get_stat_leaders` | Statistical leaders with qualifying minimums |
+| `maxpreps_get_rankings` | Ranked leaderboard for a sport, national or by state |
+| `maxpreps_get_team_rankings` | Where one team ranks nationally, by state, division, metro |
+| `maxpreps_get_standings` | Conference table with every team's record |
 | `maxpreps_get_athlete` | One athlete's career page |
 | `maxpreps_healthcheck` | Connectivity plus site build-id resolution |
 | `maxpreps_get_page` | Raw page data for anything the above doesn't cover |
@@ -52,7 +55,10 @@ Paths are not guessable, so resolve before you fetch:
 
 1. `maxpreps_search "myers park"` → the school's `canonicalUrl`
 2. `maxpreps_list_teams` on that path → real team paths
-3. `maxpreps_get_schedule` / `_roster` / `_stat_leaders` on a team path
+3. `maxpreps_get_schedule` / `_roster` / `_stat_leaders` / `_standings` on a team path
+
+To go the other way — discovering teams rather than looking one up — `maxpreps_get_rankings`
+returns a ranked leaderboard whose entries each carry a `teamPath` you can feed straight back in.
 
 Prior seasons are a `season` argument (`"25-26"`); roughly 20 years are available.
 
@@ -83,7 +89,8 @@ These are properties of MaxPreps' data, and each one has bitten a naive reading:
   finds nothing. Drop qualifiers before concluding a school is absent.
 - **Statewide scoreboards aren't available.** `/<st>/<sport>/scores/` renders its
   game list client-side from a route that has no server-rendered payload. Per-team
-  schedules are the supported way to get scores.
+  schedules are the supported way to get scores; `maxpreps_get_rankings` is the way
+  to see a whole state's teams at once.
 
 ## Shell-only alternative
 

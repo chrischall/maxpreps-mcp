@@ -89,14 +89,14 @@ describe('server boot', () => {
     const { tools } = await handshake(join(dir, 'bundle.js'), dir);
     // Deliberately a floor, not an exact count: PR CI tests the branch merged
     // with main, so a sibling PR adding a tool must not break this.
-    expect(tools.length).toBeGreaterThanOrEqual(9);
+    expect(tools.length).toBeGreaterThanOrEqual(13);
     expect(tools.map((t) => t.name)).toContain('maxpreps_healthcheck');
   }, 40_000);
 
   it('the npm bin entry point boots from the package root', async () => {
     // Guards the `bin` path against a tsconfig rootDir slip emitting dist/src/.
     const { tools } = await handshake(BIN, ROOT);
-    expect(tools.length).toBeGreaterThanOrEqual(9);
+    expect(tools.length).toBeGreaterThanOrEqual(13);
   }, 40_000);
 
   it('boots without contacting MaxPreps', async () => {

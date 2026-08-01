@@ -84,6 +84,43 @@ with a page that carries neither `athleteName` nor `careerContext`.
 `conferenceStandingPlacement`.
 `teamContext.teamSeasonPickerData[]` — every season, with `canonicalUrl` and `year`.
 
+### Rankings leaderboard
+
+Path `[<st>/]<sport>[/<season>]/rankings/<page>`. The trailing page number is
+**required** — omitting it 404s. 25 entries per page.
+
+`rankingsListData` — `{ totalCount, rankings[], year, lastUpdated, fullRankingsLink }`,
+all plainly named. Each ranking: `rank`, `rating`, `strength`, `movement`, `overall`
+(win-loss), `schoolName`, `schoolFormattedName`, `stateCode`, `teamLink` (a full
+schedule URL — strip the origin and the season/tab to get a team path).
+
+Scale check at capture: NC football 25-26 = 415 teams; national = 13,947.
+Omitting the season selects the current one, which is legitimately empty
+(`totalCount: 0`) before that sport is under way.
+
+### `rankings` tab (one team)
+
+`rankingsData.contexts[]` — one entry per ranking MaxPreps publishes for the team
+(National, state, state division/class, metro), each with a `canonicalUrl` to the
+full leaderboard and an `entries[]` window of nearby ranks.
+`historicalRankingsData` is frequently `null`.
+
+Note this is **not** the same payload as `teamContext.rankingsData` on the team
+home page, which is only `{ data, timeStamp }` with no contexts.
+
+### `standings` tab
+
+`standingsData.standingSections[]` — the conference table(s) the team sits in.
+Each section: `headerName`, `headerType`, `fullStandingsLink`, and `standings[]`
+with named rows (`schoolName`, `conferenceWinLossTies`, `overallWinLossTies`,
+`conferenceStandingPlacement`, `teamCanonicalUrl`, …). No positional encoding.
+
+Also **not** the same as `teamContext.standingsData` on the team home page, which
+holds only this team's own `{ overallStanding, leagueStanding }` lines.
+
+`leaderStats[]` — highlighted stat leaders with rank context (`currentRank`,
+`contextName`), distinct from the `stats` tab's flat leader list.
+
 ### `stats` tab
 
 `playerStatLeadersData` — `{ leaders[], minimums, lastUpdated }`, all plainly named.
@@ -93,7 +130,13 @@ with a page that carries neither `athleteName` nor `careerContext`.
 `/<st>/<sport>/scores/` (the statewide scoreboard) returns page chrome only. The
 game list is hydrated by a route that does not fire server-side, and no XHR to
 `production.api.maxpreps.com` was observed on that page. Per-team schedules are
-the supported path to scores.
+the supported path to scores, and the rankings leaderboard is the way to enumerate
+a state's teams.
+
+Individual **game / box-score** pages (`/<st>/<sport>/game/<slug>/<date>/?c=<id>`)
+are served by the App Router, not the pages router: their `_next/data` route
+returns HTML and the page carries no `__NEXT_DATA__` store. Reading them would
+require parsing the RSC flight stream, so no box-score tool exists.
 
 ## Positional encoding
 

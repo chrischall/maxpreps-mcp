@@ -6,7 +6,8 @@
 //   mpx.mjs search "myers park"
 //   mpx.mjs buildid
 //
-// kinds: search teams roster schedule stats team school athlete raw buildid
+// kinds: search teams roster schedule stats rankings teamrankings standings
+//        team school athlete raw buildid
 // flags: --all (keep isDeleted rows)  --raw (skip decoding, emit pageProps)
 
 import { readFileSync } from 'node:fs';
@@ -149,6 +150,41 @@ const decoders = {
       })),
 
   stats: (p) => p.playerStatLeadersData ?? null,
+
+  // Leaderboard page: [<st>/]<sport>[/<season>]/rankings/<page> — the trailing
+  // page number is required. 25 teams per page.
+  rankings: (p) => {
+    const d = p.rankingsListData ?? {};
+    return {
+      season: d.year ?? null,
+      lastUpdated: d.lastUpdated ?? null,
+      totalCount: d.totalCount ?? 0,
+      teams: (d.rankings ?? []).map((t) => ({
+        ...t,
+        teamPath: (t.teamLink ?? '')
+          .replace(/^https?:\/\/[^/]+\//, '')
+          .replace(/\/(?:\d{2}-\d{2}\/)?(?:schedule|roster|stats|rankings|standings)\/?$/, ''),
+      })),
+    };
+  },
+
+  // A single team's rank in each context MaxPreps publishes for it.
+  teamrankings: (p) =>
+    (p.rankingsData?.contexts ?? []).map((c) => ({
+      contextName: c.contextName,
+      fullListUrl: c.canonicalUrl,
+      nearby: c.entries ?? [],
+    })),
+
+  // The conference table the team sits in, plus highlighted stat leaders.
+  standings: (p) => ({
+    sections: (p.standingsData?.standingSections ?? []).map((s) => ({
+      name: s.headerName ?? null,
+      fullStandingsUrl: s.fullStandingsLink ?? null,
+      teams: s.standings ?? [],
+    })),
+    leaderStats: p.leaderStats ?? [],
+  }),
 
   team: (p) => ({
     ...(p.teamContext?.data ?? {}),

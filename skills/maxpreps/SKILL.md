@@ -28,6 +28,8 @@ With no path it decodes a payload on stdin. Kinds:
 - `schedule` — games with scores, result, home/away (decodes the positional array)
 - `roster` — players with jersey, position, height, class (decodes the positional array)
 - `stats` — team stat leaders · `team` — season info, record, standings, rankings
+- `rankings` — ranked leaderboard for a sport (see path note below)
+- `teamrankings` / `standings` — one team's ranks; its conference table
 - `school` — school profile + nearby schools · `athlete` — one athlete's career
 - `raw` — undecoded `pageProps`, for anything without a dedicated kind
 - `buildid` — print the cached build id
@@ -51,6 +53,9 @@ Team path grammar is `<sport>[/girls][/jv|/freshman][/<yy-yy>]/<tab>`, but the s
 `field-hockey` is Girls with no gender segment). Always take paths from `teams`.
 
 Tabs: `schedule`, `roster`, `stats`, `rankings`, `standings`. Omit the tab for the team home page.
+
+Leaderboards live on their own path: `[<st>/]<sport>[/<season>]/rankings/<page>` — the trailing
+page number is **required** (omitting it 404s) and each page holds 25 teams.
 
 ## Seasons
 
