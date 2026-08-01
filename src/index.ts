@@ -8,6 +8,8 @@ import { registerScheduleTools } from './tools/schedule.js';
 import { registerRosterTools } from './tools/roster.js';
 import { registerStatsTools } from './tools/stats.js';
 import { registerAthleteTools } from './tools/athlete.js';
+import { registerRankingsTools } from './tools/rankings.js';
+import { registerStandingsTools } from './tools/standings.js';
 import { registerUtilityTools } from './tools/utilities.js';
 
 // MaxPreps needs no credentials, so there is no deferred config error to carry:
@@ -26,6 +28,8 @@ await runMcp({
     registerRosterTools,
     registerStatsTools,
     registerAthleteTools,
+    registerRankingsTools,
+    registerStandingsTools,
     registerUtilityTools,
   ],
 });

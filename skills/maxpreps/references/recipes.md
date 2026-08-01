@@ -76,6 +76,31 @@ node "$M" athlete "nc/charlotte/myers-park-mustangs/athletes/brody-keefe?careeri
 
 `.history` is an array of season entries; `.cards` holds the rendered career highlights.
 
+## Rankings and standings
+
+```bash
+# leaderboard: [<st>/]<sport>[/<season>]/rankings/<page>  — page number required, 25 per page
+node "$M" rankings nc/football/25-26/rankings/1 \
+  | jq -r '"\(.totalCount) teams, updated \(.lastUpdated)", (.teams[] | "\(.rank)  \(.schoolFormattedName)  \(.overall)  \(.rating)  \(.teamPath)")'
+
+# national instead of one state: drop the state segment
+node "$M" rankings football/25-26/rankings/1 | jq -r '.teams[] | "\(.rank) \(.schoolFormattedName)"'
+
+# where does one team rank?
+node "$M" teamrankings nc/charlotte/myers-park-mustangs/football/25-26/rankings \
+  | jq -r '.[] | "\(.contextName): \(.nearby[] | select(.schoolId=="327115b3-501d-4047-aee8-ff08e6b35bd9") | .rank)"'
+
+# the conference table
+node "$M" standings nc/charlotte/myers-park-mustangs/football/25-26/standings \
+  | jq -r '.sections[] | .name, (.teams[] | "  \(.conferenceStandingPlacement // "-")  \(.schoolName)  conf \(.conferenceWinLossTies)  overall \(.overallWinLossTies)")'
+```
+
+`teamPath` on each ranking entry is already stripped to a plain team path, so it
+feeds straight into `schedule` / `roster` / `team`.
+
+An out-of-season leaderboard returns `totalCount: 0` — that is the season not having
+started, not an empty state. Pass an earlier season.
+
 ## Anything else
 
 Any public page has a JSON twin. Use `raw` and explore:

@@ -78,6 +78,56 @@ export function parseSiteUrl(input: string): ParsedSiteUrl {
  * supplied path is stripped before recomposing. Gender and level segments
  * (`/girls`, `/jv`) are part of the team path and are preserved.
  */
+const SPORT_RE = /^[a-z0-9-]+$/;
+const STATE_RE = /^[A-Za-z]{2}$/;
+
+export interface RankingsPathArgs {
+  sport: string;
+  /** Two-letter state code. Omit for national rankings. */
+  state?: string;
+  /** Season label. Omit for the current season. */
+  season?: string;
+  pageNumber: number;
+}
+
+/**
+ * Compose a rankings leaderboard path.
+ *
+ * Grammar is `[<state>/]<sport>[/<season>]/rankings/<page>`. The trailing page
+ * segment is **not optional** upstream — omitting it 404s.
+ */
+export function buildRankingsPath({ sport, state, season, pageNumber }: RankingsPathArgs): string {
+  const slug = String(sport ?? '').toLowerCase().trim();
+  if (!SPORT_RE.test(slug)) {
+    throw createHelpfulError(`"${sport}" is not a sport slug.`, {
+      hint: 'Use the lowercase hyphenated slug MaxPreps uses in URLs, e.g. football, basketball, cross-country. maxpreps_list_teams shows the slugs a school uses.',
+    });
+  }
+  if (state !== undefined && !STATE_RE.test(state)) {
+    throw createHelpfulError(`"${state}" is not a two-letter state code.`, {
+      hint: 'Use a postal abbreviation like NC or CA, or omit it for national rankings.',
+    });
+  }
+  if (season !== undefined && !SEASON_RE.test(season)) {
+    throw createHelpfulError(`"${season}" is not a MaxPreps season label.`, {
+      hint: 'Use the two-digit form, e.g. 25-26, or omit it for the current season.',
+    });
+  }
+  if (!Number.isInteger(pageNumber) || pageNumber < 1) {
+    throw createHelpfulError(`Rankings page must be a positive integer, got ${pageNumber}.`, {
+      hint: 'Pages are 1-based and return 25 teams each.',
+    });
+  }
+  const parts = [
+    ...(state ? [state.toLowerCase()] : []),
+    slug,
+    ...(season ? [season] : []),
+    'rankings',
+    String(pageNumber),
+  ];
+  return parts.join('/');
+}
+
 export function buildTeamPath(teamPath: string, tab?: TeamTab, season?: string): string {
   if (season !== undefined && !SEASON_RE.test(season)) {
     throw createHelpfulError(`"${season}" is not a MaxPreps season label.`, {
