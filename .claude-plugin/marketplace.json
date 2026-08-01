@@ -1,0 +1,35 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "maxpreps-mcp",
+  "owner": {
+    "name": "Chris Hall",
+    "email": "chris.c.hall@gmail.com"
+  },
+  "metadata": {
+    "description": "MCP server for MaxPreps — high school schedules, scores, records, rosters and stat leaders",
+    "version": "0.0.0"
+  },
+  "plugins": [
+    {
+      "name": "maxpreps-mcp",
+      "displayName": "MaxPreps",
+      "source": "./",
+      "description": "MCP server for MaxPreps — read any US high school's team schedules, scores, records, rosters, stat leaders and athlete careers. Reads the site's public server-rendered data; no account or API key.",
+      "version": "0.0.0",
+      "author": {
+        "name": "Chris Hall"
+      },
+      "homepage": "https://github.com/chrischall/maxpreps-mcp",
+      "repository": "https://github.com/chrischall/maxpreps-mcp",
+      "license": "MIT",
+      "keywords": [
+        "maxpreps",
+        "high-school-sports",
+        "schedules",
+        "scores",
+        "mcp"
+      ],
+      "category": "sports"
+    }
+  ]
+}

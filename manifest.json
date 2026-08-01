@@ -1,0 +1,77 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/dxt/main/dist/mcpb-manifest.schema.json",
+  "manifest_version": "0.3",
+  "name": "maxpreps-mcp",
+  "display_name": "MaxPreps",
+  "version": "0.0.0",
+  "description": "Look up any US high school on MaxPreps — team schedules, scores, records, rosters, stat leaders and athlete careers",
+  "author": {
+    "name": "Chris Chall",
+    "email": "chris.c.hall@gmail.com",
+    "url": "https://github.com/chrischall"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chrischall/maxpreps-mcp"
+  },
+  "homepage": "https://github.com/chrischall/maxpreps-mcp",
+  "support": "https://github.com/chrischall/maxpreps-mcp/issues",
+  "license": "MIT",
+  "keywords": [
+    "maxpreps",
+    "high-school-sports",
+    "schedules",
+    "scores",
+    "rosters"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/bundle.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/dist/bundle.js"
+      ],
+      "env": {
+        "MAXPREPS_USER_AGENT": "${user_config.maxpreps_user_agent}",
+        "MAXPREPS_CACHE_TTL": "${user_config.maxpreps_cache_ttl}"
+      }
+    }
+  },
+  "user_config": {
+    "maxpreps_user_agent": {
+      "type": "string",
+      "title": "User-Agent (optional)",
+      "description": "Override the User-Agent sent to MaxPreps. Leave blank to use the built-in one.",
+      "required": false
+    },
+    "maxpreps_cache_ttl": {
+      "type": "string",
+      "title": "Cache TTL in seconds (optional)",
+      "description": "How long to reuse a fetched page. Default 300. Set 0 to disable caching.",
+      "required": false
+    }
+  },
+  "tools": [
+    { "name": "maxpreps_search", "description": "Find a high school or athlete by name" },
+    { "name": "maxpreps_get_school", "description": "Get a school profile and its identifiers" },
+    { "name": "maxpreps_list_teams", "description": "List every team path a school publishes" },
+    { "name": "maxpreps_get_team", "description": "Get a team season: record, standings, rankings, season list" },
+    { "name": "maxpreps_get_schedule", "description": "Get a team's games with results and scores" },
+    { "name": "maxpreps_get_roster", "description": "Get a team roster with positions and measurements" },
+    { "name": "maxpreps_get_stat_leaders", "description": "Get a team's statistical leaders" },
+    { "name": "maxpreps_get_athlete", "description": "Get an athlete's career page" },
+    { "name": "maxpreps_healthcheck", "description": "Verify MaxPreps connectivity and build id" },
+    { "name": "maxpreps_get_page", "description": "Return raw page data for any public MaxPreps page" }
+  ],
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=22.5"
+    }
+  }
+}

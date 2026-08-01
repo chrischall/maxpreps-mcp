@@ -1,0 +1,43 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.chrischall/maxpreps-mcp",
+  "description": "MaxPreps MCP — high school schedules, scores, records, rosters and stat leaders",
+  "repository": {
+    "url": "https://github.com/chrischall/maxpreps-mcp",
+    "source": "github"
+  },
+  "version": "0.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "maxpreps-mcp",
+      "version": "0.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "MAXPREPS_USER_AGENT",
+          "description": "Optional override for the User-Agent sent to MaxPreps.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "MAXPREPS_CACHE_TTL",
+          "description": "Seconds to cache a page response. Default 300; 0 disables caching.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "MAXPREPS_MIN_INTERVAL_MS",
+          "description": "Minimum spacing between requests, in ms. Default 250.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}

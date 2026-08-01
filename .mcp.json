@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "maxpreps": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/index.js"],
+      "env": {
+        "MAXPREPS_USER_AGENT": "${MAXPREPS_USER_AGENT}",
+        "MAXPREPS_CACHE_TTL": "${MAXPREPS_CACHE_TTL}",
+        "MAXPREPS_MIN_INTERVAL_MS": "${MAXPREPS_MIN_INTERVAL_MS}"
+      }
+    }
+  }
+}
