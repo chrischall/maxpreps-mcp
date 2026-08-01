@@ -121,9 +121,55 @@ holds only this team's own `{ overallStanding, leagueStanding }` lines.
 `leaderStats[]` — highlighted stat leaders with rank context (`currentRank`,
 `contextName`), distinct from the `stats` tab's flat leader list.
 
+### Stat leaderboards
+
+Two levels. The **index** at `[<st>/]<sport>[/<season>]/stat-leaders` lists categories in
+`statLeadersData.seasons[].categories[]`, each with `statName`, `nationalAverage`,
+`contextAverage` and a `canonicalUrl`. The leaf slug is **not derivable** from the stat name
+(Total TDs → `touchdowns/tot-tds`, Sacks → `sacks/tot-sacks`), so the index is required.
+
+The **leaf** board carries `statLeadersListData` = `{ columns[], rows[], minimums, … }` with
+up to 200 rows. Stat values are self-describing: `row[8]` aligns positionally with `columns`,
+which carries the display names.
+
+The surrounding 11-tuple has **no key list anywhere in the bundle** — the renderer is
+React-compiler output that destructures through a memo cache, so nothing names the indices.
+It was derived empirically and checked across a full 200-row table:
+
+| Index | Field | How it was pinned |
+| --- | --- | --- |
+| 0, 1 | firstName, lastName | match the athlete URL slug |
+| 2 | athlete stats URL | always contains `/athletes/` |
+| 3 | positions | may be multi-value, e.g. `"QB, OLB"` |
+| 4 | rank | equals row order in every row |
+| 5 | **city** | 199/200 equal the team URL's city segment |
+| 6 | **schoolName** | 189/200 begin the team URL's school slug |
+| 7 | schoolNameAcronym | — |
+| 8 | stat values | length always equals `columns.length` |
+| 9 | team URL | always a team path |
+| 10 | stateCode | always two letters |
+
+**Indices 5 and 6 are city-then-school, not school-then-city.** The first row of a board is a
+useless witness for this: a school named after its town (`"Kinston"`, `"Kinston"`) reads the
+same either way. The tell is a school whose town differs — Midway High is in Newton Grove but
+lists city `Dunn`, and Dixon High sits at `nc/holly-ridge/dixon-bulldogs`.
+
+Because this is inference rather than a lifted key list, `decodeStatLeaders` validates arity
+and column alignment and returns the rows **undecoded with a warning** when they do not hold,
+rather than emitting a confidently mislabelled table.
+
 ### `stats` tab
 
 `playerStatLeadersData` — `{ leaders[], minimums, lastUpdated }`, all plainly named.
+
+### Tournaments
+
+A team's schedule payload also carries `tournaments[]` — the playoff/championship brackets the
+season fed into, with `tournamentName`, `bracketName`, `tournamentUrl`, start/end dates and
+`isTournamentPlayOff`. It arrives free with the schedule fetch.
+
+The dedicated `[<st>/]<sport>/playoffs` page, by contrast, server-renders only state and sport
+metadata — the brackets themselves hydrate client-side, so there is nothing to read there.
 
 ### Not available
 

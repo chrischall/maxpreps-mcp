@@ -101,6 +101,22 @@ feeds straight into `schedule` / `roster` / `team`.
 An out-of-season leaderboard returns `totalCount: 0` — that is the season not having
 started, not an empty state. Pass an earlier season.
 
+## Stat leaderboards
+
+```bash
+# 1. list the categories — leaf paths are NOT derivable from the stat name
+node "$M" statcats nc/football/25-26/stat-leaders | jq -r '.[] | "\(.statName)  natAvg=\(.nationalAverage)  \(.path)"'
+
+# 2. read one board
+node "$M" statleaders nc/football/25-26/stat-leaders/offense/rushing/yds \
+  | jq -r '.[0:15][] | "\(.rank)  \(.name)  (\(.schoolName), \(.city))  \(.stats["Rushing Yards"])  \(.teamPath)"'
+```
+
+Index 5 is **city** and index 6 is **school** in the raw tuple — `mpx` already maps them, but
+if you ever decode by hand, note the first row of a board can't tell you which is which when
+the school is named after its town. If the shape drifts, `statleaders` returns
+`{warning, columns, rawRows}` rather than a mislabelled table.
+
 ## Anything else
 
 Any public page has a JSON twin. Use `raw` and explore:

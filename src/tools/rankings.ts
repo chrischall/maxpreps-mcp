@@ -58,7 +58,13 @@ export function registerRankingsTools(server: McpServer): void {
       const props = await client.page(path);
       const data = (props.rankingsListData ?? {}) as Record<string, unknown>;
       const rows = Array.isArray(data.rankings) ? data.rankings : [];
-      const total = typeof data.totalCount === 'number' ? data.totalCount : rows.length;
+      // Only `totalCount` describes the whole leaderboard. Falling back to the
+      // page's own length would make `hasMore` false on a full page and stop a
+      // paging caller at page 1, so when it is missing infer "there is probably
+      // more" from the page being full instead.
+      const total = typeof data.totalCount === 'number' ? data.totalCount : null;
+      const knownTotal = total ?? rows.length + (rows.length === PAGE_SIZE ? PAGE_SIZE : 0);
+      const hasMore = total !== null ? pageNumber * PAGE_SIZE < total : rows.length === PAGE_SIZE;
 
       const teams = rows.map((r) => {
         const t = r as Record<string, unknown>;
@@ -71,12 +77,18 @@ export function registerRankingsTools(server: McpServer): void {
         sport,
         season: data.year ?? season ?? null,
         lastUpdated: data.lastUpdated ?? null,
-        totalCount: total,
+        totalCount: total ?? knownTotal,
         pageNumber,
         pageSize: PAGE_SIZE,
-        hasMore: pageNumber * PAGE_SIZE < total,
+        hasMore,
         teams,
-        ...(rows.length === 0
+        // An empty page only means an empty *season* when the leaderboard itself
+        // is empty. Paging past the end of a populated season also yields no
+        // rows, and saying "the season hasn't started" there would be wrong.
+        ...(rows.length === 0 && total !== null && total > 0
+          ? { note: `Page ${pageNumber} is past the end of this leaderboard (${total} teams). Request a lower page number.` }
+          : {}),
+        ...(rows.length === 0 && (total === null || total === 0)
           ? {
               note: `No ranked teams for this season${season ? '' : ' (the current one)'}. Rankings populate once the season is under way — pass an earlier season such as 25-26.`,
             }

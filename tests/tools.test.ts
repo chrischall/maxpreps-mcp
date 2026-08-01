@@ -72,6 +72,21 @@ describe('maxpreps_get_schedule', () => {
     expect(r.note).toMatch(/season may not have started/i);
   });
 
+  it('surfaces playoff tournaments the schedule references', async () => {
+    page.mockResolvedValue({
+      contests: [],
+      tournaments: [{ tournamentName: '2025 NCHSAA Football Championships', isTournamentPlayOff: true }],
+    });
+    const r = await call('maxpreps_get_schedule', { team: 'nc/x/y/football' });
+    expect(r.tournaments).toHaveLength(1);
+    expect(r.tournaments[0].tournamentName).toMatch(/NCHSAA/);
+  });
+
+  it('omits the tournaments key entirely when there are none', async () => {
+    const r = await call('maxpreps_get_schedule', { team: 'nc/x/y/football' });
+    expect(r).not.toHaveProperty('tournaments');
+  });
+
   it('rejects a malformed season before making a request', async () => {
     const raw = await harness.callTool('maxpreps_get_schedule', { team: 'nc/x/y/football', season: '2025-26' });
     expect(raw.isError).toBe(true);

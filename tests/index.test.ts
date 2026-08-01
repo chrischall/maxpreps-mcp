@@ -8,6 +8,7 @@ import { registerStatsTools } from '../src/tools/stats.js';
 import { registerAthleteTools } from '../src/tools/athlete.js';
 import { registerRankingsTools } from '../src/tools/rankings.js';
 import { registerStandingsTools } from '../src/tools/standings.js';
+import { registerStatLeaderTools } from '../src/tools/statleaders.js';
 import { registerUtilityTools } from '../src/tools/utilities.js';
 import { createTestHarness } from './helpers.js';
 
@@ -21,6 +22,7 @@ const registerAll = (server: Parameters<typeof registerSearchTools>[0]) => {
   registerAthleteTools(server);
   registerRankingsTools(server);
   registerStandingsTools(server);
+  registerStatLeaderTools(server);
   registerUtilityTools(server);
 };
 
@@ -50,6 +52,8 @@ describe('tool registry', () => {
         'maxpreps_get_rankings',
         'maxpreps_get_team_rankings',
         'maxpreps_get_standings',
+        'maxpreps_list_stat_categories',
+        'maxpreps_get_stat_leaderboard',
       ].sort(),
     );
   });

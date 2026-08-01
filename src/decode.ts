@@ -189,3 +189,123 @@ export function decodeSchedule(pageProps: Props, opts: DecodeOptions = {}): Game
     })
     .filter((g) => opts.includeDeleted || !g.isDeleted);
 }
+
+// --- stat leaderboards ----------------------------------------------------
+//
+// Statewide/national stat-leader tables ship as `{ columns[], rows[] }`. The
+// stat *values* are self-describing — row[8] aligns positionally with `columns`,
+// which carries the display names — but the surrounding 11-tuple has no key list
+// anywhere in the site bundle (the renderer is React-compiler output that
+// destructures through a memo cache, so nothing names the indices).
+//
+// The mapping below was therefore derived empirically and checked across a full
+// 200-row table: rank equals row order; index 2 is always an /athletes/ URL and
+// index 9 a team URL; index 8 always matches the column count; index 10 is
+// always a two-letter state. Crucially, indices 5 and 6 are **city then school**,
+// not the reverse — 199/200 rows put index 5 at the URL's city segment and
+// 189/200 put index 6 at its school segment. The first row of a table is a bad
+// witness for this, because a school named after its town ("Kinston", "Kinston")
+// reads identically either way.
+//
+// Because this is inference rather than a lifted key list, `decodeStatLeaders`
+// validates the shape and returns the raw rows untouched when it does not hold,
+// rather than emitting a confidently mislabelled table.
+
+const STAT_ROW_ARITY = 11;
+const IDX = {
+  firstName: 0,
+  lastName: 1,
+  athleteUrl: 2,
+  positions: 3,
+  rank: 4,
+  city: 5,
+  schoolName: 6,
+  schoolAcronym: 7,
+  stats: 8,
+  teamUrl: 9,
+  stateCode: 10,
+} as const;
+
+export interface StatLeader {
+  rank: number | null;
+  name: string;
+  firstName: string | null;
+  lastName: string | null;
+  positions: string | null;
+  schoolName: string | null;
+  city: string | null;
+  schoolAcronym: string | null;
+  stateCode: string | null;
+  athleteUrl: string | null;
+  teamPath: string | null;
+  stats: Record<string, string | number | null>;
+}
+
+export interface StatLeaderTable {
+  columns: { name: string; displayName: string; header: string }[];
+  leaders: StatLeader[];
+  /** Set when the row shape did not validate; `rawRows` carries the payload as-is. */
+  decodeWarning?: string;
+  rawRows?: unknown[];
+}
+
+const looksLikeStatRow = (r: unknown, columnCount: number): boolean =>
+  Array.isArray(r) &&
+  r.length === STAT_ROW_ARITY &&
+  Array.isArray(r[IDX.stats]) &&
+  (r[IDX.stats] as unknown[]).length === columnCount;
+
+/** Decode a `statLeadersListData` table, degrading to raw rows on shape drift. */
+export function decodeStatLeaders(listData: Props): StatLeaderTable {
+  const cols = (Array.isArray(listData.columns) ? listData.columns : []) as Record<string, unknown>[];
+  const rows = Array.isArray(listData.rows) ? listData.rows : [];
+  const columns = cols.map((c) => ({
+    name: String(c.name ?? ''),
+    displayName: String(c.displayName ?? c.name ?? ''),
+    header: String(c.header ?? ''),
+  }));
+
+  if (rows.length > 0 && !rows.every((r) => looksLikeStatRow(r, columns.length))) {
+    return {
+      columns,
+      leaders: [],
+      decodeWarning:
+        'MaxPreps changed the stat-leader row shape, so the rows are returned undecoded. ' +
+        `Expected ${STAT_ROW_ARITY} fields with a ${columns.length}-value stat array.`,
+      rawRows: rows,
+    };
+  }
+
+  return {
+    columns,
+    leaders: rows.map((row) => {
+      const r = row as unknown[];
+      const values = (r[IDX.stats] as unknown[]) ?? [];
+      const stats: Record<string, string | number | null> = {};
+      columns.forEach((c, i) => {
+        stats[c.displayName || c.name] = (values[i] as string | number | null) ?? null;
+      });
+      return {
+        rank: num(r[IDX.rank]),
+        name: [str(r[IDX.firstName]), str(r[IDX.lastName])].filter(Boolean).join(' '),
+        firstName: str(r[IDX.firstName]),
+        lastName: str(r[IDX.lastName]),
+        positions: str(r[IDX.positions]),
+        schoolName: str(r[IDX.schoolName]),
+        city: str(r[IDX.city]),
+        schoolAcronym: str(r[IDX.schoolAcronym]),
+        stateCode: str(r[IDX.stateCode]),
+        athleteUrl: str(r[IDX.athleteUrl]),
+        teamPath: (() => {
+          const u = str(r[IDX.teamUrl]);
+          if (!u) return null;
+          return u
+            .replace(/^https?:\/\/[^/]+\//, '')
+            .replace(/^\/+/, '')
+            .replace(/\/(?:\d{2}-\d{2}\/)?(?:schedule|roster|stats|rankings|standings)\/?$/, '');
+        })(),
+        stats,
+      };
+    }),
+  };
+}

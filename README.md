@@ -31,7 +31,7 @@ Or add it to an MCP host:
 
 ## Tools
 
-All thirteen are read-only; this server has no write path.
+All fifteen are read-only; this server has no write path.
 
 | Tool | What it does |
 | --- | --- |
@@ -45,6 +45,8 @@ All thirteen are read-only; this server has no write path.
 | `maxpreps_get_rankings` | Ranked leaderboard for a sport, national or by state |
 | `maxpreps_get_team_rankings` | Where one team ranks nationally, by state, division, metro |
 | `maxpreps_get_standings` | Conference table with every team's record |
+| `maxpreps_list_stat_categories` | Which stat leaderboards exist, and their paths |
+| `maxpreps_get_stat_leaderboard` | Ranked athletes for one stat, statewide or national |
 | `maxpreps_get_athlete` | One athlete's career page |
 | `maxpreps_healthcheck` | Connectivity plus site build-id resolution |
 | `maxpreps_get_page` | Raw page data for anything the above doesn't cover |
@@ -57,8 +59,10 @@ Paths are not guessable, so resolve before you fetch:
 2. `maxpreps_list_teams` on that path → real team paths
 3. `maxpreps_get_schedule` / `_roster` / `_stat_leaders` / `_standings` on a team path
 
-To go the other way — discovering teams rather than looking one up — `maxpreps_get_rankings`
-returns a ranked leaderboard whose entries each carry a `teamPath` you can feed straight back in.
+To go the other way — discovering teams and athletes rather than looking one up —
+`maxpreps_get_rankings` and `maxpreps_get_stat_leaderboard` return ranked lists whose entries
+each carry a `teamPath` you can feed straight back in. Stat leaderboard paths are not
+guessable either, so list the categories first.
 
 Prior seasons are a `season` argument (`"25-26"`); roughly 20 years are available.
 

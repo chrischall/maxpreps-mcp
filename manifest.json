@@ -98,6 +98,14 @@
       "description": "Conference standings table plus ranked stat leaders"
     },
     {
+      "name": "maxpreps_list_stat_categories",
+      "description": "List the stat leaderboards available for a sport"
+    },
+    {
+      "name": "maxpreps_get_stat_leaderboard",
+      "description": "Ranked athletes for one stat, statewide or national"
+    },
+    {
       "name": "maxpreps_healthcheck",
       "description": "Verify MaxPreps connectivity and build id"
     },
