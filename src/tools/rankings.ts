@@ -81,17 +81,17 @@ export function registerRankingsTools(server: McpServer): void {
         pageSize: PAGE_SIZE,
         hasMore,
         teams,
-        // An empty page means an empty *season* only on page 1. Past that it
-        // just means the caller walked off the end — true whether or not the
-        // payload told us the total.
-        ...(rows.length === 0 && pageNumber > 1
+        // An empty page has two quite different causes. A leaderboard the
+        // payload confirms is empty (`totalCount: 0`) is empty on *every* page,
+        // so telling the caller to try a lower one would send them in circles;
+        // that is the out-of-season case. Otherwise an empty page past page 1
+        // just means they walked off the end.
+        ...(rows.length === 0
           ? {
-              note: `Page ${pageNumber} is past the end of this leaderboard${total !== null ? ` (${total} teams)` : ''}. Request a lower page number.`,
-            }
-          : {}),
-        ...(rows.length === 0 && pageNumber === 1
-          ? {
-              note: `No ranked teams for this season${season ? '' : ' (the current one)'}. Rankings populate once the season is under way — pass an earlier season such as 25-26.`,
+              note:
+                total === 0 || pageNumber === 1
+                  ? `No ranked teams for this season${season ? '' : ' (the current one)'}. Rankings populate once the season is under way — pass an earlier season such as 25-26.`
+                  : `Page ${pageNumber} is past the end of this leaderboard${total !== null ? ` (${total} teams)` : ''}. Request a lower page number.`,
             }
           : {}),
       });

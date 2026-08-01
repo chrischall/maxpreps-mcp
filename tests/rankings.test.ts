@@ -103,6 +103,21 @@ describe('maxpreps_get_rankings', () => {
     expect((await call('maxpreps_get_rankings', { sport: 'football', season: '25-26' })).hasMore).toBe(false);
   });
 
+  it.each(['..', '?x', './', 'a/'])('rejects a bogus two-char state %s without fetching', async (bad) => {
+    const raw = await harness.callTool('maxpreps_get_rankings', { sport: 'football', state: bad });
+    expect(raw.isError).toBe(true);
+    expect(page).not.toHaveBeenCalled();
+  });
+
+  it('says the season is empty, not "try a lower page", when totalCount is a confirmed 0', async () => {
+    // A leaderboard with 0 teams is empty on every page, so suggesting a lower
+    // page number would send the caller round in circles.
+    page.mockResolvedValue({ rankingsListData: { totalCount: 0, rankings: [], year: '26-27' } });
+    const r = await call('maxpreps_get_rankings', { sport: 'football', state: 'NC', pageNumber: 4 });
+    expect(r.note).toMatch(/no ranked teams/i);
+    expect(r.note).not.toMatch(/lower page/i);
+  });
+
   it('reports an unknown total as null rather than inventing one that contradicts hasMore', async () => {
     const rows = Array.from({ length: 25 }, (_, i) => ({ rank: i + 1 }));
     page.mockResolvedValue({ rankingsListData: { rankings: rows, year: '25-26' } });
