@@ -103,6 +103,23 @@ describe('maxpreps_get_rankings', () => {
     expect((await call('maxpreps_get_rankings', { sport: 'football', season: '25-26' })).hasMore).toBe(false);
   });
 
+  it('reports an unknown total as null rather than inventing one that contradicts hasMore', async () => {
+    const rows = Array.from({ length: 25 }, (_, i) => ({ rank: i + 1 }));
+    page.mockResolvedValue({ rankingsListData: { rankings: rows, year: '25-26' } });
+    const r = await call('maxpreps_get_rankings', { sport: 'football', season: '25-26', pageNumber: 3 });
+    // Page 3 means 75 teams have been seen; claiming a total of 50 while also
+    // saying hasMore would be incoherent.
+    expect(r.totalCount).toBeNull();
+    expect(r.hasMore).toBe(true);
+  });
+
+  it('does not blame the season when paging past the end of a payload with no totalCount', async () => {
+    page.mockResolvedValue({ rankingsListData: { rankings: [], year: '25-26' } });
+    const r = await call('maxpreps_get_rankings', { sport: 'football', season: '25-26', pageNumber: 9 });
+    expect(r.note ?? '').not.toMatch(/season/i);
+    expect(r.note ?? '').toMatch(/past the end|lower page/i);
+  });
+
   it('notes an out-of-season leaderboard rather than implying no teams exist', async () => {
     page.mockResolvedValue({ rankingsListData: { totalCount: 0, rankings: [], year: '26-27' } });
     const r = await call('maxpreps_get_rankings', { sport: 'football', state: 'NC' });
