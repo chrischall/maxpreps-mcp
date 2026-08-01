@@ -70,14 +70,6 @@ export function parseSiteUrl(input: string): ParsedSiteUrl {
   return { path, query };
 }
 
-/**
- * Compose a team path with an optional tab and season.
- *
- * The season is a segment that sits **between** the team and the tab
- * (`.../football/25-26/schedule`), so any tab or season already present on the
- * supplied path is stripped before recomposing. Gender and level segments
- * (`/girls`, `/jv`) are part of the team path and are preserved.
- */
 const SPORT_RE = /^[a-z0-9-]+$/;
 const STATE_RE = /^[A-Za-z]{2}$/;
 
@@ -128,6 +120,14 @@ export function buildRankingsPath({ sport, state, season, pageNumber }: Rankings
   return parts.join('/');
 }
 
+/**
+ * Compose a team path with an optional tab and season.
+ *
+ * The season is a segment that sits **between** the team and the tab
+ * (`.../football/25-26/schedule`), so any tab or season already present on the
+ * supplied path is stripped before recomposing. Gender and level segments
+ * (`/girls`, `/jv`) are part of the team path and are preserved.
+ */
 export function buildTeamPath(teamPath: string, tab?: TeamTab, season?: string): string {
   if (season !== undefined && !SEASON_RE.test(season)) {
     throw createHelpfulError(`"${season}" is not a MaxPreps season label.`, {

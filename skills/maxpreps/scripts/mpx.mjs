@@ -7,7 +7,7 @@
 //   mpx.mjs buildid
 //
 // kinds: search teams roster schedule stats rankings teamrankings standings
-//        team school athlete raw buildid
+//        statcats statleaders team school athlete raw buildid
 // flags: --all (keep isDeleted rows)  --raw (skip decoding, emit pageProps)
 
 import { readFileSync } from 'node:fs';
@@ -166,6 +166,44 @@ const decoders = {
           .replace(/\/(?:\d{2}-\d{2}\/)?(?:schedule|roster|stats|rankings|standings)\/?$/, ''),
       })),
     };
+  },
+
+  // Stat-leader category index. Each category's `path` is the leaf leaderboard —
+  // it is NOT derivable from the stat name, so always take it from here.
+  statcats: (p) =>
+    (p.statLeadersData?.seasons ?? []).flatMap((s) =>
+      (s.categories ?? []).map((c) => ({
+        statName: c.statName,
+        group: c.groupName,
+        subGroup: c.subGroupName,
+        nationalAverage: c.nationalAverage,
+        contextAverage: c.contextAverage,
+        minGamesPlayed: s.minGamesPlayed,
+        path: (c.canonicalUrl ?? '').replace(/^https?:\/\/[^/]+\//, '').replace(/\/+$/, ''),
+      })),
+    ),
+
+  // Leaf stat leaderboard. Stat values are self-describing via `columns`; the
+  // surrounding 11-tuple was derived empirically (see references/recipes.md).
+  // Note index 5 is CITY and index 6 is SCHOOL, not the other way round.
+  statleaders: (p) => {
+    const d = p.statLeadersListData ?? {};
+    const cols = d.columns ?? [];
+    const rows = d.rows ?? [];
+    const ok = rows.every((r) => Array.isArray(r) && r.length === 11 && Array.isArray(r[8]) && r[8].length === cols.length);
+    if (rows.length && !ok) return { warning: 'stat-leader row shape changed; rows returned undecoded', columns: cols, rawRows: rows };
+    return rows.map((r) => ({
+      rank: r[4],
+      name: `${r[0]} ${r[1]}`.trim(),
+      positions: r[3],
+      schoolName: r[6],
+      city: r[5],
+      stateCode: r[10],
+      athleteUrl: r[2],
+      teamPath: String(r[9] ?? '').replace(/^https?:\/\/[^/]+\//, '').replace(/^\/+/, '')
+        .replace(/\/(?:\d{2}-\d{2}\/)?(?:schedule|roster|stats|rankings|standings)\/?$/, ''),
+      stats: Object.fromEntries(cols.map((c, i) => [c.displayName || c.name, r[8][i]])),
+    }));
   },
 
   // A single team's rank in each context MaxPreps publishes for it.

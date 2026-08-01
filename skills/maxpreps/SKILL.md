@@ -30,6 +30,7 @@ With no path it decodes a payload on stdin. Kinds:
 - `stats` — team stat leaders · `team` — season info, record, standings, rankings
 - `rankings` — ranked leaderboard for a sport (see path note below)
 - `teamrankings` / `standings` — one team's ranks; its conference table
+- `statcats` / `statleaders` — stat leaderboard index; one board's ranked athletes
 - `school` — school profile + nearby schools · `athlete` — one athlete's career
 - `raw` — undecoded `pageProps`, for anything without a dedicated kind
 - `buildid` — print the cached build id

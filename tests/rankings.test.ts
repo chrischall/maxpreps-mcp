@@ -81,6 +81,28 @@ describe('maxpreps_get_rankings', () => {
     expect(r.teams[0].teamPath).toBe('nc/greensboro/grimsley-whirlies/football');
   });
 
+  // Both of these are paging defects: a caller walking pages must not be told
+  // the season is empty, nor stopped at page 1.
+  it('does not call a populated season empty when paging past the last page', async () => {
+    page.mockResolvedValue({ rankingsListData: { totalCount: 415, rankings: [], year: '25-26' } });
+    const r = await call('maxpreps_get_rankings', { sport: 'football', state: 'NC', season: '25-26', pageNumber: 99 });
+    expect(r.note ?? '').not.toMatch(/season/i);
+    expect(r.totalCount).toBe(415);
+  });
+
+  it('keeps hasMore true on a full page when totalCount is absent', async () => {
+    const rows = Array.from({ length: 25 }, (_, i) => ({ rank: i + 1 }));
+    page.mockResolvedValue({ rankingsListData: { rankings: rows, year: '25-26' } });
+    const r = await call('maxpreps_get_rankings', { sport: 'football', season: '25-26' });
+    expect(r.hasMore).toBe(true);
+  });
+
+  it('reports hasMore false on a short page when totalCount is absent', async () => {
+    const rows = Array.from({ length: 7 }, (_, i) => ({ rank: i + 1 }));
+    page.mockResolvedValue({ rankingsListData: { rankings: rows, year: '25-26' } });
+    expect((await call('maxpreps_get_rankings', { sport: 'football', season: '25-26' })).hasMore).toBe(false);
+  });
+
   it('notes an out-of-season leaderboard rather than implying no teams exist', async () => {
     page.mockResolvedValue({ rankingsListData: { totalCount: 0, rankings: [], year: '26-27' } });
     const r = await call('maxpreps_get_rankings', { sport: 'football', state: 'NC' });
