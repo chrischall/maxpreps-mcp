@@ -93,6 +93,12 @@ describe('maxpreps_list_stat_categories', () => {
     expect(page).toHaveBeenCalledWith('football/25-26/stat-leaders');
   });
 
+  it.each(['..', '?x', './', '%2e'])('rejects a bogus two-char state %s without fetching', async (bad) => {
+    const raw = await harness.callTool('maxpreps_list_stat_categories', { sport: 'football', state: bad });
+    expect(raw.isError).toBe(true);
+    expect(page).not.toHaveBeenCalled();
+  });
+
   it('returns a ready-to-use leaderboard path per category', async () => {
     const r = await call('maxpreps_list_stat_categories', { sport: 'football', state: 'NC', season: '25-26' });
     expect(r.count).toBeGreaterThan(0);

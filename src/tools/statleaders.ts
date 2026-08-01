@@ -2,15 +2,18 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { textResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
-import { parseSiteUrl, SEASON_RE } from '../paths.js';
+import { parseSiteUrl, buildStatLeadersIndexPath, SEASON_RE } from '../paths.js';
 import { decodeStatLeaders } from '../decode.js';
 
 const SPORT_RE = /^[a-z0-9-]+$/;
 
 const sportArg = z.string().min(1).regex(SPORT_RE, 'Use a lowercase slug, e.g. football');
+// Regex, not a length check: this value is interpolated into a fetched URL, and
+// a two-character `..` would climb a path segment. buildStatLeadersIndexPath
+// re-validates it, so this is defence in depth with a clearer error message.
 const stateArg = z
   .string()
-  .length(2)
+  .regex(/^[A-Za-z]{2}$/, 'Use a two-letter state code, e.g. NC')
   .optional()
   .describe('Two-letter state code, e.g. NC. Omit for national leaders.');
 const seasonArg = z
@@ -42,7 +45,7 @@ export function registerStatLeaderTools(server: McpServer): void {
       },
     },
     async ({ sport, state, season }) => {
-      const path = [state?.toLowerCase(), sport, season, 'stat-leaders'].filter(Boolean).join('/');
+      const path = buildStatLeadersIndexPath(sport, state, season);
       const props = await client.page(path);
       const data = (props.statLeadersData ?? {}) as Record<string, unknown>;
       const seasons = Array.isArray(data.seasons) ? data.seasons : [];

@@ -42,7 +42,7 @@ export function registerRankingsTools(server: McpServer): void {
         sport: z.string().min(1).describe('Sport slug as used in MaxPreps URLs, e.g. football, basketball'),
         state: z
           .string()
-          .length(2)
+          .regex(/^[A-Za-z]{2}$/, 'Use a two-letter state code, e.g. NC')
           .optional()
           .describe('Two-letter state code, e.g. NC. Omit for national rankings.'),
         season: z
@@ -58,12 +58,11 @@ export function registerRankingsTools(server: McpServer): void {
       const props = await client.page(path);
       const data = (props.rankingsListData ?? {}) as Record<string, unknown>;
       const rows = Array.isArray(data.rankings) ? data.rankings : [];
-      // Only `totalCount` describes the whole leaderboard. Falling back to the
-      // page's own length would make `hasMore` false on a full page and stop a
-      // paging caller at page 1, so when it is missing infer "there is probably
-      // more" from the page being full instead.
+      // Only `totalCount` describes the whole leaderboard. When it is absent,
+      // report the total as unknown rather than synthesising one — a made-up
+      // figure would contradict both `hasMore` and the pages already returned.
+      // Fullness of the current page is still a sound signal for `hasMore`.
       const total = typeof data.totalCount === 'number' ? data.totalCount : null;
-      const knownTotal = total ?? rows.length + (rows.length === PAGE_SIZE ? PAGE_SIZE : 0);
       const hasMore = total !== null ? pageNumber * PAGE_SIZE < total : rows.length === PAGE_SIZE;
 
       const teams = rows.map((r) => {
@@ -77,18 +76,20 @@ export function registerRankingsTools(server: McpServer): void {
         sport,
         season: data.year ?? season ?? null,
         lastUpdated: data.lastUpdated ?? null,
-        totalCount: total ?? knownTotal,
+        totalCount: total,
         pageNumber,
         pageSize: PAGE_SIZE,
         hasMore,
         teams,
-        // An empty page only means an empty *season* when the leaderboard itself
-        // is empty. Paging past the end of a populated season also yields no
-        // rows, and saying "the season hasn't started" there would be wrong.
-        ...(rows.length === 0 && total !== null && total > 0
-          ? { note: `Page ${pageNumber} is past the end of this leaderboard (${total} teams). Request a lower page number.` }
+        // An empty page means an empty *season* only on page 1. Past that it
+        // just means the caller walked off the end — true whether or not the
+        // payload told us the total.
+        ...(rows.length === 0 && pageNumber > 1
+          ? {
+              note: `Page ${pageNumber} is past the end of this leaderboard${total !== null ? ` (${total} teams)` : ''}. Request a lower page number.`,
+            }
           : {}),
-        ...(rows.length === 0 && (total === null || total === 0)
+        ...(rows.length === 0 && pageNumber === 1
           ? {
               note: `No ranked teams for this season${season ? '' : ' (the current one)'}. Rankings populate once the season is under way — pass an earlier season such as 25-26.`,
             }

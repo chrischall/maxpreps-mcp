@@ -83,12 +83,13 @@ export interface RankingsPathArgs {
 }
 
 /**
- * Compose a rankings leaderboard path.
+ * Validate the sport / state / season segments shared by the leaderboard paths.
  *
- * Grammar is `[<state>/]<sport>[/<season>]/rankings/<page>`. The trailing page
- * segment is **not optional** upstream — omitting it 404s.
+ * Every one of these is interpolated straight into a fetched URL, so a
+ * length-only check is not enough: a two-character `state` of `..` would climb a
+ * path segment. Each segment is matched against its own pattern instead.
  */
-export function buildRankingsPath({ sport, state, season, pageNumber }: RankingsPathArgs): string {
+function validateScope(sport: string, state?: string, season?: string): string {
   const slug = String(sport ?? '').toLowerCase().trim();
   if (!SPORT_RE.test(slug)) {
     throw createHelpfulError(`"${sport}" is not a sport slug.`, {
@@ -97,7 +98,7 @@ export function buildRankingsPath({ sport, state, season, pageNumber }: Rankings
   }
   if (state !== undefined && !STATE_RE.test(state)) {
     throw createHelpfulError(`"${state}" is not a two-letter state code.`, {
-      hint: 'Use a postal abbreviation like NC or CA, or omit it for national rankings.',
+      hint: 'Use a postal abbreviation like NC or CA, or omit it for national scope.',
     });
   }
   if (season !== undefined && !SEASON_RE.test(season)) {
@@ -105,6 +106,23 @@ export function buildRankingsPath({ sport, state, season, pageNumber }: Rankings
       hint: 'Use the two-digit form, e.g. 25-26, or omit it for the current season.',
     });
   }
+  return slug;
+}
+
+/** `[<state>/]<sport>[/<season>]/stat-leaders` — the stat category index. */
+export function buildStatLeadersIndexPath(sport: string, state?: string, season?: string): string {
+  const slug = validateScope(sport, state, season);
+  return [state?.toLowerCase(), slug, season, 'stat-leaders'].filter(Boolean).join('/');
+}
+
+/**
+ * Compose a rankings leaderboard path.
+ *
+ * Grammar is `[<state>/]<sport>[/<season>]/rankings/<page>`. The trailing page
+ * segment is **not optional** upstream — omitting it 404s.
+ */
+export function buildRankingsPath({ sport, state, season, pageNumber }: RankingsPathArgs): string {
+  const slug = validateScope(sport, state, season);
   if (!Number.isInteger(pageNumber) || pageNumber < 1) {
     throw createHelpfulError(`Rankings page must be a positive integer, got ${pageNumber}.`, {
       hint: 'Pages are 1-based and return 25 teams each.',
