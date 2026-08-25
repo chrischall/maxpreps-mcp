@@ -19,8 +19,11 @@ env:
       Minimum spacing between requests, in ms. Default 250.
 egress:
   allow:
-    # Only hosts the SERVER process actually fetches. Hosts that appear
-    # solely in a URL this server BUILDS and returns are excluded.
-    - m.maxpreps.com
-    - maxpreps.com
+    # The only host the server fetches: client.ts pins the base URL to
+    # https://www.maxpreps.com.
+    #
+    # maxpreps.com and m.maxpreps.com are deliberately NOT here. They appear
+    # only in paths.ts's accepted-hostname list, which VALIDATES a user-supplied
+    # URL in order to extract a site path — the fetch that follows always goes
+    # to the www base above, never to the host the user passed.
     - www.maxpreps.com
