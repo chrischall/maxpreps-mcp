@@ -1,0 +1,29 @@
+version: 1
+name: MaxPreps
+slug: maxpreps
+summary: >-
+  Look up any US high school on MaxPreps — team schedules, scores, records,
+  rosters, stat leaders and athlete careers
+env:
+  - name: MAXPREPS_USER_AGENT
+    required: false
+    help: >-
+      Optional override for the User-Agent sent to MaxPreps.
+  - name: MAXPREPS_CACHE_TTL
+    required: false
+    help: >-
+      Seconds to cache a page response. Default 300; 0 disables caching.
+  - name: MAXPREPS_MIN_INTERVAL_MS
+    required: false
+    help: >-
+      Minimum spacing between requests, in ms. Default 250.
+egress:
+  allow:
+    # The only host the server fetches: client.ts pins the base URL to
+    # https://www.maxpreps.com.
+    #
+    # maxpreps.com and m.maxpreps.com are deliberately NOT here. They appear
+    # only in paths.ts's accepted-hostname list, which VALIDATES a user-supplied
+    # URL in order to extract a site path — the fetch that follows always goes
+    # to the www base above, never to the host the user passed.
+    - www.maxpreps.com
