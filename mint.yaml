@@ -1,0 +1,26 @@
+version: 1
+name: MaxPreps
+slug: maxpreps
+summary: >-
+  Look up any US high school on MaxPreps — team schedules, scores, records,
+  rosters, stat leaders and athlete careers
+env:
+  - name: MAXPREPS_USER_AGENT
+    required: false
+    help: >-
+      Optional override for the User-Agent sent to MaxPreps.
+  - name: MAXPREPS_CACHE_TTL
+    required: false
+    help: >-
+      Seconds to cache a page response. Default 300; 0 disables caching.
+  - name: MAXPREPS_MIN_INTERVAL_MS
+    required: false
+    help: >-
+      Minimum spacing between requests, in ms. Default 250.
+egress:
+  allow:
+    # Only hosts the SERVER process actually fetches. Hosts that appear
+    # solely in a URL this server BUILDS and returns are excluded.
+    - m.maxpreps.com
+    - maxpreps.com
+    - www.maxpreps.com
