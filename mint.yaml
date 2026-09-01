@@ -20,8 +20,8 @@ env:
   - name: MAXPREPS_TIMEOUT_MS
     required: false
     help: >-
-      Per-request timeout in milliseconds. Raise it on a slow link; the default
-      suits a normal connection.
+      Per-request timeout in milliseconds (default 20000). Raise it on a slow
+      link.
 egress:
   allow:
     # The only host the server fetches: client.ts pins the base URL to
