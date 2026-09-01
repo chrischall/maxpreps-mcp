@@ -17,6 +17,11 @@ env:
     required: false
     help: >-
       Minimum spacing between requests, in ms. Default 250.
+  - name: MAXPREPS_TIMEOUT_MS
+    required: false
+    help: >-
+      Per-request timeout in milliseconds. Raise it on a slow link; the default
+      suits a normal connection.
 egress:
   allow:
     # The only host the server fetches: client.ts pins the base URL to
