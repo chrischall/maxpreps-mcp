@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.3.0](https://github.com/chrischall/maxpreps-mcp/compare/v0.2.0...v0.3.0) (2026-09-04)
+
+
+### Features
+
+* **tools:** minify every response — no formatting whitespace on any payload ([#36](https://github.com/chrischall/maxpreps-mcp/issues/36)) ([61c2845](https://github.com/chrischall/maxpreps-mcp/commit/61c284548f8faf57bca01c48670b83fb3068a9ee))
+
+
+### Bug Fixes
+
+* **build:** restore the literal em dash in the package description ([#38](https://github.com/chrischall/maxpreps-mcp/issues/38)) ([7f09e44](https://github.com/chrischall/maxpreps-mcp/commit/7f09e44623de47c369f02578735c350f45129b5f))
+
+
+### Refactor
+
+* **tools:** drop the unwired view.ts scaffold ([#39](https://github.com/chrischall/maxpreps-mcp/issues/39)) ([9ad9d5f](https://github.com/chrischall/maxpreps-mcp/commit/9ad9d5f8b72896ea211fd3218c1fafea0727e9ca))
+
+
+### Documentation
+
+* **mint:** declare MAXPREPS_TIMEOUT_MS in mint.yaml ([#26](https://github.com/chrischall/maxpreps-mcp/issues/26)) ([4d93bc9](https://github.com/chrischall/maxpreps-mcp/commit/4d93bc905449ae17ccb6fa5314b9575ac0b2c9e9))
+* **mint:** name the MAXPREPS_TIMEOUT_MS default ([#29](https://github.com/chrischall/maxpreps-mcp/issues/29)) ([106ae98](https://github.com/chrischall/maxpreps-mcp/commit/106ae98c682091334ff2616eecd320ed789bf37c)), closes [#27](https://github.com/chrischall/maxpreps-mcp/issues/27)
+
 ## [0.2.0](https://github.com/chrischall/maxpreps-mcp/compare/v0.1.0...v0.2.0) (2026-08-01)
 
 

@@ -3,7 +3,7 @@
   "manifest_version": "0.3",
   "name": "maxpreps-mcp",
   "display_name": "MaxPreps",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Look up any US high school on MaxPreps — team schedules, scores, records, rosters, stat leaders and athlete careers",
   "author": {
     "name": "Chris Chall",
