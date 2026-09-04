@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, toolAnnotations } from '@chrischall/mcp-utils';
+import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildTeamPath } from '../paths.js';
 import { decodeSchedule } from '../decode.js';
@@ -61,7 +61,7 @@ export function registerScheduleTools(server: McpServer): void {
       // season fed into; it costs nothing extra to surface them.
       const tournaments = Array.isArray(props.tournaments) ? props.tournaments : [];
 
-      return textResult({
+      return minifiedResult({
         path,
         count: games.length,
         record,

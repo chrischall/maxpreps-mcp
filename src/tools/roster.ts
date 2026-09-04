@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, toolAnnotations } from '@chrischall/mcp-utils';
+import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildTeamPath } from '../paths.js';
 import { decodeRoster } from '../decode.js';
@@ -37,7 +37,7 @@ export function registerRosterTools(server: McpServer): void {
         const needle = position.toLowerCase();
         players = players.filter((p) => p.positions.toLowerCase().split(/,\s*/).includes(needle));
       }
-      return textResult({
+      return minifiedResult({
         path,
         count: players.length,
         players,

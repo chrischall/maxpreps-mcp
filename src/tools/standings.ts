@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, toolAnnotations } from '@chrischall/mcp-utils';
+import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildTeamPath } from '../paths.js';
 import { teamArg, seasonArg } from './team.js';
@@ -43,7 +43,7 @@ export function registerStandingsTools(server: McpServer): void {
       const leaderStats = Array.isArray(props.leaderStats) ? props.leaderStats : [];
       const teamCount = sections.reduce((n, s) => n + s.teams.length, 0);
 
-      return textResult({
+      return minifiedResult({
         path,
         sectionCount: sections.length,
         teamCount,

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, toolAnnotations } from '@chrischall/mcp-utils';
+import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildRankingsPath, buildTeamPath, SEASON_RE } from '../paths.js';
 import { teamArg, seasonArg } from './team.js';
@@ -70,7 +70,7 @@ export function registerRankingsTools(server: McpServer): void {
         return { ...t, teamPath: toTeamPath(t.teamLink) };
       });
 
-      return textResult({
+      return minifiedResult({
         path,
         scope: state ? state.toUpperCase() : 'National',
         sport,
@@ -137,7 +137,7 @@ export function registerRankingsTools(server: McpServer): void {
         };
       });
 
-      return textResult({
+      return minifiedResult({
         path,
         contexts,
         historical: props.historicalRankingsData ?? null,
