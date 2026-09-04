@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, toolAnnotations } from '@chrischall/mcp-utils';
+import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 
 interface SearchProps extends Record<string, unknown> {
@@ -33,7 +33,7 @@ export function registerSearchTools(server: McpServer): void {
       const props = await client.page<SearchProps>('search', { q: query });
       const schools = (props.initialSchoolResults ?? []).slice(0, limit);
       const athletes = (props.initialCareerResults ?? []).slice(0, limit);
-      return textResult({
+      return minifiedResult({
         query,
         schoolCount: schools.length,
         athleteCount: athletes.length,

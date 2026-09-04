@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, toolAnnotations, createHelpfulError } from '@chrischall/mcp-utils';
+import { createHelpfulError, minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl } from '../paths.js';
 
@@ -42,7 +42,7 @@ export function registerAthleteTools(server: McpServer): void {
       const name = (props.athleteName ?? null) as string | null;
       const career = props.careerContext ?? null;
       const empty = name === null && career === null;
-      return textResult({
+      return minifiedResult({
         path,
         careerId: careerid,
         name,

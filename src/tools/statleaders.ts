@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, toolAnnotations } from '@chrischall/mcp-utils';
+import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl, buildStatLeadersIndexPath, SEASON_RE } from '../paths.js';
 import { decodeStatLeaders } from '../decode.js';
@@ -71,7 +71,7 @@ export function registerStatLeaderTools(server: McpServer): void {
         });
       });
 
-      return textResult({
+      return minifiedResult({
         path,
         count: categories.length,
         categories,
@@ -112,7 +112,7 @@ export function registerStatLeaderTools(server: McpServer): void {
       const table = decodeStatLeaders(listData);
 
       if (table.decodeWarning) {
-        return textResult({
+        return minifiedResult({
           path: bare,
           warning: table.decodeWarning,
           columns: table.columns,
@@ -120,7 +120,7 @@ export function registerStatLeaderTools(server: McpServer): void {
         });
       }
 
-      return textResult({
+      return minifiedResult({
         path: bare,
         stat: listData.statHeader ?? null,
         group: listData.group ?? null,

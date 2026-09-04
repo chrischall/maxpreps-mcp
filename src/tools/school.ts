@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, toolAnnotations } from '@chrischall/mcp-utils';
+import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl } from '../paths.js';
 import { extractTeams } from '../teams.js';
@@ -32,7 +32,7 @@ export function registerSchoolTools(server: McpServer): void {
     async ({ school, includeNearby }) => {
       const { path } = parseSiteUrl(school);
       const props = await client.page(path);
-      return textResult({
+      return minifiedResult({
         path,
         school: props.schoolContext ?? null,
         links: props.schoolLinksData ?? null,
@@ -74,7 +74,7 @@ export function registerSchoolTools(server: McpServer): void {
         const needle = level.toLowerCase();
         teams = teams.filter((t) => t.level?.toLowerCase() === needle);
       }
-      return textResult({
+      return minifiedResult({
         path,
         count: teams.length,
         teams,

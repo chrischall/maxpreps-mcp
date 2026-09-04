@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, toolAnnotations } from '@chrischall/mcp-utils';
+import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildTeamPath, SEASON_RE } from '../paths.js';
 import { extractTeams } from '../teams.js';
@@ -41,7 +41,7 @@ export function registerTeamTools(server: McpServer): void {
       const path = buildTeamPath(team, undefined, season);
       const props = await client.page(path);
       const ctx = (props.teamContext ?? {}) as Record<string, unknown>;
-      return textResult({
+      return minifiedResult({
         path,
         team: ctx.data ?? null,
         standings: ctx.standingsData ?? null,

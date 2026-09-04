@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, toolAnnotations } from '@chrischall/mcp-utils';
+import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl } from '../paths.js';
 
@@ -21,7 +21,7 @@ export function registerUtilityTools(server: McpServer): void {
       }),
       inputSchema: {},
     },
-    async () => textResult(await client.healthcheck()),
+    async () => minifiedResult(await client.healthcheck()),
   );
 
   server.registerTool(
@@ -50,13 +50,13 @@ export function registerUtilityTools(server: McpServer): void {
     async ({ path, keysOnly }) => {
       const parsed = parseSiteUrl(path);
       const props = await client.page(parsed.path, parsed.query);
-      if (!keysOnly) return textResult({ path: parsed.path, pageProps: props });
+      if (!keysOnly) return minifiedResult({ path: parsed.path, pageProps: props });
       const shape = Object.entries(props).map(([key, value]) => ({
         key,
         type: Array.isArray(value) ? 'array' : value === null ? 'null' : typeof value,
         ...(Array.isArray(value) ? { length: value.length } : {}),
       }));
-      return textResult({ path: parsed.path, keys: shape });
+      return minifiedResult({ path: parsed.path, keys: shape });
     },
   );
 }

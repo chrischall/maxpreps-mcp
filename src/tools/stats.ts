@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, toolAnnotations } from '@chrischall/mcp-utils';
+import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildTeamPath } from '../paths.js';
 import { teamArg, seasonArg } from './team.js';
@@ -33,7 +33,7 @@ export function registerStatsTools(server: McpServer): void {
         lastUpdated?: unknown;
       } | null;
       const leaders = data?.leaders ?? [];
-      return textResult({
+      return minifiedResult({
         path,
         count: leaders.length,
         lastUpdated: data?.lastUpdated ?? null,
