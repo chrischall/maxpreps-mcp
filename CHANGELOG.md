@@ -5,7 +5,7 @@
 
 ### Features
 
-* **tools:** compact by default — strip media URLs, and minify every response ([#36](https://github.com/chrischall/maxpreps-mcp/issues/36)) ([61c2845](https://github.com/chrischall/maxpreps-mcp/commit/61c284548f8faf57bca01c48670b83fb3068a9ee))
+* **tools:** minify every response — no formatting whitespace on any payload ([#36](https://github.com/chrischall/maxpreps-mcp/issues/36)) ([61c2845](https://github.com/chrischall/maxpreps-mcp/commit/61c284548f8faf57bca01c48670b83fb3068a9ee))
 
 
 ### Bug Fixes
