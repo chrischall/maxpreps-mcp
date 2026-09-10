@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.1](https://github.com/chrischall/maxpreps-mcp/compare/v0.3.0...v0.3.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **deps:** @chrischall/mcp-utils 0.26.1 ([#48](https://github.com/chrischall/maxpreps-mcp/issues/48)) ([9bcd9fe](https://github.com/chrischall/maxpreps-mcp/commit/9bcd9fe7d1ea4d04f8f834d9c6120c3b6e79d9a1))
+* **deps:** bump hono from 4.13.0 to 4.13.7 ([#46](https://github.com/chrischall/maxpreps-mcp/issues/46)) ([30f5525](https://github.com/chrischall/maxpreps-mcp/commit/30f5525bd068a99e9a624156b42aadf77ea547c7))
+* **deps:** declare the peer floors mcp-utils 0.26.1 requires ([#50](https://github.com/chrischall/maxpreps-mcp/issues/50)) ([d493559](https://github.com/chrischall/maxpreps-mcp/commit/d49355970197a5d317f409e903c598ee9b7dcf83)), closes [#49](https://github.com/chrischall/maxpreps-mcp/issues/49)
+
 ## [0.3.0](https://github.com/chrischall/maxpreps-mcp/compare/v0.2.0...v0.3.0) (2026-09-04)
 
 
