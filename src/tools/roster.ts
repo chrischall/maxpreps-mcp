@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildTeamPath } from '../paths.js';
@@ -22,12 +22,12 @@ export function registerRosterTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
-      inputSchema: {
+      inputSchema: z.object({
         team: teamArg,
         season: seasonArg,
         includeDeleted: z.boolean().default(false).describe('Include soft-deleted roster entries the site hides'),
         position: z.string().optional().describe('Case-insensitive filter on position, e.g. "QB"'),
-      },
+      }),
     },
     async ({ team, season, includeDeleted, position }) => {
       const path = buildTeamPath(team, 'roster', season);

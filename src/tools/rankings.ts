@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildRankingsPath, buildTeamPath, SEASON_RE } from '../paths.js';
@@ -38,7 +38,7 @@ export function registerRankingsTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
-      inputSchema: {
+      inputSchema: z.object({
         sport: z.string().min(1).describe('Sport slug as used in MaxPreps URLs, e.g. football, basketball'),
         state: z
           .string()
@@ -51,7 +51,7 @@ export function registerRankingsTools(server: McpServer): void {
           .optional()
           .describe('Season label, e.g. 25-26. Omit for the current season.'),
         pageNumber: z.number().int().positive().default(1).describe('1-based page; 25 teams per page'),
-      },
+      }),
     },
     async ({ sport, state, season, pageNumber }) => {
       const path = buildRankingsPath({ sport, state, season, pageNumber });
@@ -112,10 +112,10 @@ export function registerRankingsTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
-      inputSchema: {
+      inputSchema: z.object({
         team: teamArg,
         season: seasonArg,
-      },
+      }),
     },
     async ({ team, season }) => {
       const path = buildTeamPath(team, 'rankings', season);

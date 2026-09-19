@@ -1,4 +1,5 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildTeamPath } from '../paths.js';
@@ -19,10 +20,10 @@ export function registerStatsTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
-      inputSchema: {
+      inputSchema: z.object({
         team: teamArg,
         season: seasonArg,
-      },
+      }),
     },
     async ({ team, season }) => {
       const path = buildTeamPath(team, 'stats', season);

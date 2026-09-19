@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl } from '../paths.js';
@@ -24,10 +24,10 @@ export function registerSchoolTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
-      inputSchema: {
+      inputSchema: z.object({
         school: schoolArg,
         includeNearby: z.boolean().default(false).describe('Include the nearby-schools list'),
-      },
+      }),
     },
     async ({ school, includeNearby }) => {
       const { path } = parseSiteUrl(school);
@@ -56,11 +56,11 @@ export function registerSchoolTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
-      inputSchema: {
+      inputSchema: z.object({
         school: schoolArg,
         sport: z.string().optional().describe('Case-insensitive filter on the sport name, e.g. "football"'),
         level: z.string().optional().describe('Filter on level, e.g. "Varsity", "JV", "Freshman"'),
-      },
+      }),
     },
     async ({ school, sport, level }) => {
       const { path } = parseSiteUrl(school);

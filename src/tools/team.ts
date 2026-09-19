@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildTeamPath, SEASON_RE } from '../paths.js';
@@ -31,11 +31,11 @@ export function registerTeamTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
-      inputSchema: {
+      inputSchema: z.object({
         team: teamArg,
         season: seasonArg,
         includeSeasons: z.boolean().default(true).describe('Include the list of available seasons'),
-      },
+      }),
     },
     async ({ team, season, includeSeasons }) => {
       const path = buildTeamPath(team, undefined, season);
