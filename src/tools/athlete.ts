@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { createHelpfulError, minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl } from '../paths.js';
@@ -19,13 +19,13 @@ export function registerAthleteTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
-      inputSchema: {
+      inputSchema: z.object({
         athlete: z
           .string()
           .min(1)
           .describe('Athlete career path or URL, including ?careerid=… (use search’s careerCanonicalUrl)'),
         careerId: z.string().optional().describe('careerid, if not already present in the path'),
-      },
+      }),
     },
     async ({ athlete, careerId }) => {
       const { path, query } = parseSiteUrl(athlete);

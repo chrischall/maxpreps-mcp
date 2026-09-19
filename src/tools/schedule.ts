@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildTeamPath } from '../paths.js';
@@ -23,7 +23,7 @@ export function registerScheduleTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
-      inputSchema: {
+      inputSchema: z.object({
         team: teamArg,
         season: seasonArg,
         played: z
@@ -35,7 +35,7 @@ export function registerScheduleTools(server: McpServer): void {
           .boolean()
           .default(true)
           .describe('Include playoff/championship tournament entries the schedule references'),
-      },
+      }),
     },
     async ({ team, season, played, includeDeleted, includeTournaments }) => {
       const path = buildTeamPath(team, 'schedule', season);

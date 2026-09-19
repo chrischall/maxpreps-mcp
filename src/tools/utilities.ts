@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl } from '../paths.js';
@@ -19,7 +19,7 @@ export function registerUtilityTools(server: McpServer): void {
         idempotent: false,
         openWorld: true,
       }),
-      inputSchema: {},
+      inputSchema: z.object({}),
     },
     async () => minifiedResult(await client.healthcheck()),
   );
@@ -39,13 +39,13 @@ export function registerUtilityTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
-      inputSchema: {
+      inputSchema: z.object({
         path: z.string().min(1).describe('Site path or maxpreps.com URL'),
         keysOnly: z
           .boolean()
           .default(false)
           .describe('Return only the top-level prop names and their types — cheap way to explore a page'),
-      },
+      }),
     },
     async ({ path, keysOnly }) => {
       const parsed = parseSiteUrl(path);

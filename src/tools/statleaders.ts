@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl, buildStatLeadersIndexPath, SEASON_RE } from '../paths.js';
@@ -38,11 +38,11 @@ export function registerStatLeaderTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
-      inputSchema: {
+      inputSchema: z.object({
         sport: sportArg.describe('Sport slug as used in MaxPreps URLs, e.g. football'),
         state: stateArg,
         season: seasonArg,
-      },
+      }),
     },
     async ({ sport, state, season }) => {
       const path = buildStatLeadersIndexPath(sport, state, season);
@@ -97,13 +97,13 @@ export function registerStatLeaderTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
-      inputSchema: {
+      inputSchema: z.object({
         path: z
           .string()
           .min(1)
           .describe('Leaderboard path from maxpreps_list_stat_categories, e.g. nc/football/25-26/stat-leaders/offense/passing/yds'),
         limit: z.number().int().positive().max(200).default(50).describe('Max athletes to return'),
-      },
+      }),
     },
     async ({ path, limit }) => {
       const { path: bare, query } = parseSiteUrl(path);
