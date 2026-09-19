@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/chrischall/maxpreps-mcp/compare/v1.0.0...v1.1.0) (2026-09-19)
+
+
+### Features
+
+* **deps:** take mcp-utils 1.0.0 for the 2026-era stdio entry ([#60](https://github.com/chrischall/maxpreps-mcp/issues/60)) ([8385d9e](https://github.com/chrischall/maxpreps-mcp/commit/8385d9ee90da9aecea7525dc6760377a7a871948))
+
 ## [1.0.0](https://github.com/chrischall/maxpreps-mcp/compare/v0.3.1...v1.0.0) (2026-09-19)
 
 
