@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/chrischall/maxpreps-mcp/compare/v0.3.1...v1.0.0) (2026-09-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* **mcp:** migrate server to SDK v2 ([#53](https://github.com/chrischall/maxpreps-mcp/issues/53))
+
+### Features
+
+* **mcp:** migrate server to SDK v2 ([#53](https://github.com/chrischall/maxpreps-mcp/issues/53)) ([e2454a9](https://github.com/chrischall/maxpreps-mcp/commit/e2454a9aed80d044d146fe62a3d091c900c31c67))
+
 ## [0.3.1](https://github.com/chrischall/maxpreps-mcp/compare/v0.3.0...v0.3.1) (2026-09-10)
 
 
