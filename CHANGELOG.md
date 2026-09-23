@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.2](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.1...v1.1.2) (2026-09-23)
+
+
+### Bug Fixes
+
+* **schedule:** report neutral-site games as 'neutral', not 'away' ([#66](https://github.com/chrischall/maxpreps-mcp/issues/66)) ([2088f7d](https://github.com/chrischall/maxpreps-mcp/commit/2088f7dcac96dfe08c5dc568f8c36b591592bf39))
+* **skill:** report a non-numeric homeAwayType as 'unknown' in the mpx schedule decoder ([#69](https://github.com/chrischall/maxpreps-mcp/issues/69)) ([7542762](https://github.com/chrischall/maxpreps-mcp/commit/7542762c59c74cbff95f6841a941bef3eef2e0d9))
+
 ## [1.1.1](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.0...v1.1.1) (2026-09-23)
 
 
