@@ -99,6 +99,11 @@ async function fetchData(path, { fresh = false } = {}) {
 
 // --- decoders -------------------------------------------------------------
 
+// homeAwayType: 0 = home, 1 = away, 2 = neutral site; anything else (including
+// a string like "0") = unknown. Mirrors decodeHomeAway in src/decode.ts.
+const HOME_AWAY = ['home', 'away', 'neutral'];
+const homeAway = (raw) => (typeof raw === 'number' ? HOME_AWAY[raw] : undefined) ?? 'unknown';
+
 const decoders = {
   raw: (p) => p,
 
@@ -134,8 +139,7 @@ const decoders = {
       .map((c) => ({
         date: c.date,
         opponent: c.opponentTeam?.formattedName ?? null,
-        // homeAwayType: 0 = home, 1 = away, 2 = neutral site; anything else = unknown
-        homeAway: ({ 0: 'home', 1: 'away', 2: 'neutral' })[c.currentTeam?.homeAwayType] ?? 'unknown',
+        homeAway: homeAway(c.currentTeam?.homeAwayType),
         result: c.currentTeam?.result ?? null,
         teamScore: c.currentTeam?.score ?? null,
         opponentScore: c.opponentTeam?.score ?? null,
