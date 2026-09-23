@@ -70,7 +70,7 @@ every season with its `year`, or read `.seasons` from `mpx team <team-path>`.
 - **An out-of-season team looks broken.** Before opening day the current season has an empty roster and no results. That is correct data, not a failure — check the prior season (`25-26`) before reporting nothing.
 - **`isDeleted` rows are real and numerous.** The 25-26 Myers Park football roster carries 87 entries, 63 of which the site renders; the rest are soft-deleted duplicates. `mpx` filters them by default (matching the site) — `--all` keeps them. Same for contests.
 - **`resultString` is winner-first, not team-first.** A loss reads `"L 20-13"` even though the team scored 13. For team-vs-opponent use the decoded `teamScore` / `opponentScore` fields, which `mpx` orients correctly.
-- **`homeAwayType`: `0` = home, `1` = away** (decoded to `homeAway`).
+- **`homeAwayType`: `0` = home, `1` = away, `2` = neutral site** (decoded to `homeAway`; any other value → `unknown`).
 - **`classYear` is a number**: 9–12, decoded to `classYearLabel` (`Fr.`/`So.`/`Jr.`/`Sr.`).
 - **Statewide scoreboards are not in the JSON.** `/<st>/<sport>/scores/` returns only page chrome — the game list is hydrated by a route that never fires server-side. Get scores per-team from `schedule` instead; don't claim a state had no games.
 - Search is strict — `"myers park high"` returns zero, `"myers park"` returns the school. Drop qualifiers and retry before concluding a school is absent.

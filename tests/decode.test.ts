@@ -7,6 +7,7 @@ import {
   deserializeArray,
   decodeRoster,
   decodeSchedule,
+  decodeHomeAway,
   ROSTER_KEYS,
   CONTEST_KEYS,
   TEAM_KEYS,
@@ -112,6 +113,30 @@ describe('decodeSchedule', () => {
     const games = decodeSchedule(mpSchedule);
     expect(games.find((g) => g.opponent?.startsWith('Jay M. Robinson'))?.homeAway).toBe('away');
     expect(games.find((g) => g.opponent?.startsWith('Providence'))?.homeAway).toBe('home');
+  });
+
+  // MaxPreps uses homeAwayType 2 for neutral-site games (tournaments, showcases).
+  // Collapsing them to 'away' badly inflated road-game counts.
+  it('maps homeAwayType 2 to neutral', () => {
+    const games = decodeSchedule(mdSchedule, { includeDeleted: true });
+    const showcase = games.find((g) => g.date?.startsWith('2025-11-22'));
+    expect(showcase?.homeAway).toBe('neutral');
+    const counts = games.reduce<Record<string, number>>((acc, g) => {
+      acc[g.homeAway] = (acc[g.homeAway] ?? 0) + 1;
+      return acc;
+    }, {});
+    expect(counts).toEqual({ neutral: 27, away: 14, home: 13 });
+  });
+
+  it.each([
+    [0, 'home'],
+    [1, 'away'],
+    [2, 'neutral'],
+    [3, 'unknown'],
+    [null, 'unknown'],
+    ['0', 'unknown'],
+  ])("decodeHomeAway(%j) is '%s'", (raw, expected) => {
+    expect(decodeHomeAway(raw)).toBe(expected);
   });
 
   // The strongest guard against a silently-shifted key map: totals derived from

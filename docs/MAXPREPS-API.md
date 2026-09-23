@@ -216,8 +216,10 @@ curl -s https://www.maxpreps.com/nc/charlotte/myers-park-mustangs/football/25-26
 
 ### Field semantics worth pinning
 
-- `homeAwayType`: `0` = home, `1` = away. Verified against the site's `vs`/`@`
-  rendering across a full season.
+- `homeAwayType`: `0` = home, `1` = away, `2` = neutral site (tournaments,
+  showcases — half of Mater Dei basketball 25-26). `0`/`1` verified against the
+  site's `vs`/`@` rendering across a full season. Decoded to `homeAway`
+  `'home' | 'away' | 'neutral'`, or `'unknown'` for any other value.
 - `resultString` is **winner-first**: a loss reads `"L 20-13"` even when the team
   scored 13. Use `currentTeam.score` / `opponentTeam.score` for team-vs-opponent.
 - `calculatedTeamContestResult`: `2` = win, `3` = loss.

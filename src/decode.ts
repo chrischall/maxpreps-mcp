@@ -48,8 +48,18 @@ export const TEAM_KEYS = [
 
 const CLASS_YEAR_LABEL: Record<number, string> = { 9: 'Fr.', 10: 'So.', 11: 'Jr.', 12: 'Sr.' };
 
-/** `0` = home, `1` = away (verified against the site's vs/@ rendering). */
-const HOME = 0;
+export type HomeAway = 'home' | 'away' | 'neutral' | 'unknown';
+
+/**
+ * `homeAwayType`: `0` = home, `1` = away (verified against the site's vs/@
+ * rendering), `2` = neutral site (tournaments, showcases). Anything else is
+ * reported as `'unknown'` rather than guessed.
+ */
+const HOME_AWAY: Record<number, HomeAway> = { 0: 'home', 1: 'away', 2: 'neutral' };
+
+export function decodeHomeAway(raw: unknown): HomeAway {
+  return typeof raw === 'number' ? (HOME_AWAY[raw] ?? 'unknown') : 'unknown';
+}
 
 /**
  * Rehydrate one positional row. Mirrors the site's own `deserializeObject`,
@@ -93,7 +103,7 @@ export interface Game {
   date: string | null;
   opponent: string | null;
   opponentUrl: string | null;
-  homeAway: 'home' | 'away';
+  homeAway: HomeAway;
   result: string | null;
   teamScore: number | null;
   opponentScore: number | null;
@@ -169,7 +179,7 @@ export function decodeSchedule(pageProps: Props, opts: DecodeOptions = {}): Game
         date: str(c.date),
         opponent: str(theirs.formattedName),
         opponentUrl: str(theirs.teamCanonicalUrl),
-        homeAway: (mine.homeAwayType === HOME ? 'home' : 'away') as 'home' | 'away',
+        homeAway: decodeHomeAway(mine.homeAwayType),
         result: str(mine.result),
         teamScore: num(mine.score),
         opponentScore: num(theirs.score),
