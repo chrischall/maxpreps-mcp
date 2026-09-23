@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.0...v1.1.1) (2026-09-23)
+
+
+### Bug Fixes
+
+* **deps:** require zod ^4.6.5 to match @chrischall/mcp-utils 2.4.0 ([#65](https://github.com/chrischall/maxpreps-mcp/issues/65)) ([9a482ac](https://github.com/chrischall/maxpreps-mcp/commit/9a482ac6272bb94694d0ac010c914db9826e3bd8)), closes [#63](https://github.com/chrischall/maxpreps-mcp/issues/63)
+* **deps:** upgrade @chrischall/mcp-utils to 2.4.0 and @fetchproxy/* to 3.2.0 ([#62](https://github.com/chrischall/maxpreps-mcp/issues/62)) ([55fd81f](https://github.com/chrischall/maxpreps-mcp/commit/55fd81fe0471fa9a56f47f6bb8962d91d87cb154))
+
 ## [1.1.0](https://github.com/chrischall/maxpreps-mcp/compare/v1.0.0...v1.1.0) (2026-09-19)
 
 

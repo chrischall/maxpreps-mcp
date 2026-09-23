@@ -1,7 +1,7 @@
 {
   "name": "maxpreps-mcp",
   "displayName": "MaxPreps",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "MCP server for MaxPreps — high school team schedules, scores, records, rosters, stat leaders and athlete careers",
   "author": {
     "name": "Chris Hall",
