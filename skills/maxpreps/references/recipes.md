@@ -172,7 +172,7 @@ Both held exactly when this skill was written.
 
 # Field notes
 
-- `homeAwayType` `0`=home `1`=away · `calculatedTeamContestResult` `2`=win `3`=loss
+- `homeAwayType` `0`=home `1`=away `2`=neutral · `calculatedTeamContestResult` `2`=win `3`=loss
 - `classYear` `9`–`12`; `formattedClassYear` is empty in the payload, so `mpx` derives `classYearLabel`
 - `contestState` distinguishes scheduled / in-progress / boxscore / score-not-reported
 - `dateCode` flags TBA: date-TBA and time-TBA are separate states, so a `date` can be a placeholder — check `isDateTba` / `isTimeTba` before presenting a time

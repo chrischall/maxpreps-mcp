@@ -134,8 +134,8 @@ const decoders = {
       .map((c) => ({
         date: c.date,
         opponent: c.opponentTeam?.formattedName ?? null,
-        // homeAwayType: 0 = home, 1 = away
-        homeAway: c.currentTeam?.homeAwayType === 0 ? 'home' : 'away',
+        // homeAwayType: 0 = home, 1 = away, 2 = neutral site; anything else = unknown
+        homeAway: ({ 0: 'home', 1: 'away', 2: 'neutral' })[c.currentTeam?.homeAwayType] ?? 'unknown',
         result: c.currentTeam?.result ?? null,
         teamScore: c.currentTeam?.score ?? null,
         opponentScore: c.opponentTeam?.score ?? null,
