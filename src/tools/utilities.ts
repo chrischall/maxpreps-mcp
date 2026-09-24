@@ -3,6 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl } from '../paths.js';
+import { decodeRoster } from '../decode.js';
 
 export function registerUtilityTools(server: McpServer): void {
   server.registerTool(
@@ -32,7 +33,8 @@ export function registerUtilityTools(server: McpServer): void {
         'Escape hatch: return the raw server-rendered data for any public MaxPreps page, undecoded. Use when a ' +
         'dedicated tool does not cover what you need (playoff brackets, conference standings, article listings). ' +
         'Note that positional payloads — team rosters and schedules — arrive as bare arrays here with no field ' +
-        'names; use maxpreps_get_roster / maxpreps_get_schedule for those. Read-only.',
+        'names; use maxpreps_get_roster / maxpreps_get_schedule for those. Roster rows (athleteData) are always ' +
+        'projected to public roster fields (name, jersey, positions, class, height, weight). Read-only.',
       annotations: toolAnnotations({
         title: 'Get raw MaxPreps page data',
         readOnly: true,
@@ -50,7 +52,20 @@ export function registerUtilityTools(server: McpServer): void {
     async ({ path, keysOnly }) => {
       const parsed = parseSiteUrl(path);
       const props = await client.page(parsed.path, parsed.query);
-      if (!keysOnly) return minifiedResult({ path: parsed.path, pageProps: props });
+      if (!keysOnly) {
+        // Roster rows carry account/parent/chat/photo/bio slots for high-school
+        // athletes. Never echo them raw: run them through the same allow-list
+        // projection maxpreps_get_roster uses (keeping soft-deleted rows, since
+        // this is the raw escape hatch).
+        if (props.athleteData !== undefined && props.athleteData !== null) {
+          return minifiedResult({
+            path: parsed.path,
+            note: 'athleteData is projected to public roster fields; use maxpreps_get_roster for the filtered, sorted roster.',
+            pageProps: { ...props, athleteData: decodeRoster(props, { includeDeleted: true }) },
+          });
+        }
+        return minifiedResult({ path: parsed.path, pageProps: props });
+      }
       const shape = Object.entries(props).map(([key, value]) => ({
         key,
         type: Array.isArray(value) ? 'array' : value === null ? 'null' : typeof value,

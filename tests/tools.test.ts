@@ -14,6 +14,7 @@ const { registerUtilityTools } = await import('../src/tools/utilities.js');
 const { registerSearchTools } = await import('../src/tools/search.js');
 const { registerSchoolTools } = await import('../src/tools/school.js');
 const { createTestHarness } = await import('./helpers.js');
+const { ROSTER_KEYS } = await import('../src/decode.js');
 const { parseToolResult } = await import('@chrischall/mcp-utils/test');
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures');
@@ -160,6 +161,39 @@ describe('maxpreps_get_page', () => {
     page.mockResolvedValue({ ok: true });
     await call('maxpreps_get_page', { path: 'https://www.maxpreps.com/a/b?careerid=q' });
     expect(page).toHaveBeenCalledWith('a/b', { careerid: 'q' });
+  });
+
+  // A synthetic positional roster row carrying sentinel values in every slot the
+  // allow-list projection drops (parent/account/chat/photo/bio/gender/createdOn).
+  const SENSITIVE = ['linkedAthlete', 'linkedParents', 'canStartChat', 'accountInformation', 'photoUrl',
+    'secondaryPhotoUrl', 'isFemale', 'bio', 'createdOn'];
+  const rosterRow = (deleted = false) =>
+    ROSTER_KEYS.map((k) => {
+      if (SENSITIVE.includes(k)) return `SENTINEL-${k}`;
+      if (k === 'firstName') return 'Test';
+      if (k === 'lastName') return 'Player';
+      if (k === 'jersey') return '7';
+      if (k === 'isDeleted') return deleted;
+      return null;
+    });
+
+  it('projects roster rows through the allow-list instead of echoing them raw', async () => {
+    page.mockResolvedValue({ athleteData: [rosterRow(), rosterRow(true)], teamContext: { x: 1 } });
+    const raw = await harness.callTool('maxpreps_get_page', { path: 'nc/x/y/football/roster' });
+    const text = JSON.stringify(raw);
+    for (const k of SENSITIVE) expect(text).not.toContain(`SENTINEL-${k}`);
+    const r = parseToolResult(raw) as Record<string, any>;
+    expect(r.pageProps.athleteData).toHaveLength(2);
+    expect(r.pageProps.athleteData[0]).toMatchObject({ name: 'Test Player', jersey: '7' });
+    expect(r.pageProps.teamContext).toEqual({ x: 1 });
+    expect(r.note).toMatch(/maxpreps_get_roster/);
+  });
+
+  it('projects athleteData even when the rows arrive already hydrated', async () => {
+    const hydrated = Object.fromEntries(ROSTER_KEYS.map((k, i) => [k, rosterRow()[i]]));
+    page.mockResolvedValue({ athleteData: [hydrated] });
+    const raw = await harness.callTool('maxpreps_get_page', { path: 'nc/x/y/football/roster' });
+    for (const k of SENSITIVE) expect(JSON.stringify(raw)).not.toContain(`SENTINEL-${k}`);
   });
 
   it('rejects a non-MaxPreps host', async () => {
