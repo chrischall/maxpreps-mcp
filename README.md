@@ -49,7 +49,7 @@ All fifteen are read-only; this server has no write path.
 | `maxpreps_get_stat_leaderboard` | Ranked athletes for one stat, statewide or national |
 | `maxpreps_get_athlete` | One athlete's career page |
 | `maxpreps_healthcheck` | Connectivity plus site build-id resolution |
-| `maxpreps_get_page` | Raw page data for anything the above doesn't cover |
+| `maxpreps_get_page` | Raw page data for anything the above doesn't cover (roster rows are projected to public fields) |
 
 ### Typical flow
 
