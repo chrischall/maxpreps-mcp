@@ -111,7 +111,7 @@
     },
     {
       "name": "maxpreps_get_page",
-      "description": "Return raw page data for any public MaxPreps page"
+      "description": "Return raw page data for any public MaxPreps page (roster rows projected to public fields)"
     }
   ],
   "compatibility": {
