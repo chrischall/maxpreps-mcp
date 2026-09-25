@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.3](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.2...v1.1.3) (2026-09-24)
+
+
+### Bug Fixes
+
+* **deps:** bump dotenv in the production-majors group ([#72](https://github.com/chrischall/maxpreps-mcp/issues/72)) ([4b891dc](https://github.com/chrischall/maxpreps-mcp/commit/4b891dc5e7c4d8a397a211e572248e354137a2fb))
+* **privacy:** project roster rows returned by maxpreps_get_page ([#74](https://github.com/chrischall/maxpreps-mcp/issues/74)) ([72493fd](https://github.com/chrischall/maxpreps-mcp/commit/72493fdb108f93ebd97cd7ee1f5c2326aea0e8b8))
+
 ## [1.1.2](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.1...v1.1.2) (2026-09-23)
 
 
