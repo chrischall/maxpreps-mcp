@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.5](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.4...v1.1.5) (2026-10-03)
+
+
+### Bug Fixes
+
+* **deps:** bump @chrischall/mcp-utils to 2.10.0 ([#81](https://github.com/chrischall/maxpreps-mcp/issues/81)) ([5ca029d](https://github.com/chrischall/maxpreps-mcp/commit/5ca029dc390ef3eb6426b34b4816e5a6e01e2def))
+* **deps:** bump @chrischall/mcp-utils to 2.12.0 ([#82](https://github.com/chrischall/maxpreps-mcp/issues/82)) ([8a4c5fc](https://github.com/chrischall/maxpreps-mcp/commit/8a4c5fc670a27939962cf43fecc083e13c698256))
+* **deps:** bump @chrischall/mcp-utils to 2.13.0 ([#83](https://github.com/chrischall/maxpreps-mcp/issues/83)) ([3b824f0](https://github.com/chrischall/maxpreps-mcp/commit/3b824f00a93b8b5e5319273a0a35af7cb6ec798a))
+* report CDN/WAF blocks as edge_blocked, not a rejected credential (mcp-utils 2.9.0) ([#78](https://github.com/chrischall/maxpreps-mcp/issues/78)) ([a0e3828](https://github.com/chrischall/maxpreps-mcp/commit/a0e3828bb64c0ee27252713e151f8e50c21c9a4f))
+
 ## [1.1.4](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.3...v1.1.4) (2026-09-26)
 
 
