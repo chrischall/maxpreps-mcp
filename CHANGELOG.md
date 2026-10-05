@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.6](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.5...v1.1.6) (2026-10-05)
+
+
+### Bug Fixes
+
+* **deps:** bump dotenv ([#86](https://github.com/chrischall/maxpreps-mcp/issues/86)) ([1c08761](https://github.com/chrischall/maxpreps-mcp/commit/1c087617ee7180663089e74b71e50e81ed3c933c))
+* **deps:** require @chrischall/mcp-utils 2.14.0 and MCP SDK 2.3.0 ([#88](https://github.com/chrischall/maxpreps-mcp/issues/88)) ([8a6f272](https://github.com/chrischall/maxpreps-mcp/commit/8a6f2725609d7dc8397aae3c6371180185ea8570))
+
 ## [1.1.5](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.4...v1.1.5) (2026-10-03)
 
 
