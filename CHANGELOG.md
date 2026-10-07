@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.7](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.6...v1.1.7) (2026-10-07)
+
+
+### Bug Fixes
+
+* **deps:** bump @chrischall/mcp-utils to 2.15.0 for MCP_CONFIRM_ELICITATION=off support ([#89](https://github.com/chrischall/maxpreps-mcp/issues/89)) ([0a88764](https://github.com/chrischall/maxpreps-mcp/commit/0a88764db3f94969bde63fb75320e628df65cd31))
+* **deps:** bump source-map-js ([#91](https://github.com/chrischall/maxpreps-mcp/issues/91)) ([1a3b967](https://github.com/chrischall/maxpreps-mcp/commit/1a3b9673b631dfa3c27e26c8702ada7f8d8f12ac))
+
 ## [1.1.6](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.5...v1.1.6) (2026-10-05)
 
 
