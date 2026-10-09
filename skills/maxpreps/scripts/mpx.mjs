@@ -104,6 +104,13 @@ async function fetchData(path, { fresh = false } = {}) {
 const HOME_AWAY = ['home', 'away', 'neutral'];
 const homeAway = (raw) => (typeof raw === 'number' ? HOME_AWAY[raw] : undefined) ?? 'unknown';
 
+// #0 is a real jersey: fall back only for blank/non-numeric, never a falsy 0.
+// Mirrors jerseySortKey in src/decode.ts.
+const jerseyKey = (j) => {
+  const n = j != null && String(j).trim() !== '' ? Number(j) : NaN;
+  return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
+};
+
 const decoders = {
   raw: (p) => p,
 
@@ -124,7 +131,7 @@ const decoders = {
           a.heightFeet && a.heightInches != null ? `${a.heightFeet}'${a.heightInches}"` : null,
         positions: [a.position1, a.position2, a.position3].filter(Boolean).join(', '),
       }))
-      .sort((x, y) => (Number(x.jersey) || 999) - (Number(y.jersey) || 999)),
+      .sort((x, y) => jerseyKey(x.jersey) - jerseyKey(y.jersey)),
 
   schedule: (p, { all }) =>
     (Array.isArray(p.contests) ? p.contests : [])

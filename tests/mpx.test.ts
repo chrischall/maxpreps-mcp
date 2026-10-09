@@ -40,3 +40,21 @@ describe('mpx.mjs schedule homeAway', () => {
     expect(homeAwayFor(raw)).toBe(expected);
   });
 });
+
+describe('mpx.mjs roster jersey sort', () => {
+  // Must agree with src/decode.ts decodeRoster: an active #0 sorts first.
+  it('sorts #0 before numbered players and blank jerseys last', () => {
+    const payload = JSON.parse(readFileSync(join(ROOT, 'tests/fixtures/roster-myers-park-fb-25-26.json'), 'utf8'));
+    const idx = { firstName: 5, jersey: 8, isDeleted: 17 } as const;
+    const row = (first: string, jersey: string | null) => {
+      const r = [...payload.pageProps.athleteData[0]];
+      r[idx.firstName] = first;
+      r[idx.jersey] = jersey;
+      r[idx.isDeleted] = false;
+      return r;
+    };
+    payload.pageProps.athleteData = [row('Seven', '7'), row('Blank', ''), row('Zero', '0'), row('None', null), row('Two', '2')];
+    const out = execFileSync(process.execPath, [MPX, 'roster'], { input: JSON.stringify(payload), encoding: 'utf8' });
+    expect(JSON.parse(out).map((p: { firstName: string }) => p.firstName)).toEqual(['Zero', 'Two', 'Seven', 'Blank', 'None']);
+  });
+});
