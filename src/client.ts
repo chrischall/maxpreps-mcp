@@ -53,6 +53,14 @@ export interface ClientOptions {
   cacheMax?: number;
 }
 
+/** A fully-read response: status, headers and the body text. */
+interface Fetched {
+  status: number;
+  ok: boolean;
+  headers: Headers;
+  text: string;
+}
+
 interface CacheEntry {
   at: number;
   value: PageProps;
@@ -101,18 +109,37 @@ export class MaxPrepsClient {
     return this.cache.size;
   }
 
-  private async send(url: string, accept: string): Promise<Response> {
+  /**
+   * GET `url` and read its whole body under one deadline. `fetch` resolves as
+   * soon as headers arrive, so the timeout has to cover `text()` too or a body
+   * that stalls mid-stream hangs the tool call past `MAXPREPS_TIMEOUT_MS`.
+   */
+  private async send(url: string, accept: string): Promise<Fetched> {
     return this.throttle(async () => {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), this.timeoutMs);
-      try {
-        return await this.fetchImpl(url, {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const deadline = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          controller.abort();
+          reject(new Error('timeout'));
+        }, this.timeoutMs);
+      });
+      const request = (async (): Promise<Fetched> => {
+        const res = await this.fetchImpl(url, {
           headers: { 'User-Agent': this.ua, Accept: accept },
           signal: controller.signal,
           redirect: 'follow',
         });
+        const text = await res.text();
+        return { status: res.status, ok: res.ok, headers: res.headers, text };
+      })();
+      // Swallow the loser's rejection so an abort after a win is not unhandled.
+      request.catch(() => {});
+      try {
+        return await Promise.race([request, deadline]);
       } catch {
-        // AbortError and a genuine network failure are the same story to a caller.
+        // AbortError, a stalled body and a genuine network failure are the same
+        // story to a caller.
         throw new UnreachableError(SERVICE);
       } finally {
         clearTimeout(timer);
@@ -138,7 +165,7 @@ export class MaxPrepsClient {
             ' (while resolving the site buildId)',
         );
       }
-      const match = BUILD_ID_RE.exec(await res.text());
+      const match = BUILD_ID_RE.exec(res.text);
       if (!match) {
         throw createHelpfulError('Could not find a buildId on the MaxPreps homepage.', {
           hint: 'MaxPreps changed its page shape, so the _next/data JSON routes cannot be addressed. The server needs updating.',
@@ -214,7 +241,7 @@ export class MaxPrepsClient {
       const retryAfter = Number(res.headers.get('retry-after'));
       throw new RateLimitError(SERVICE, retryAfter > 0 ? retryAfter : undefined);
     }
-    const text = await res.text();
+    const text = res.text;
     if (!res.ok) {
       throw new McpToolError(formatApiError(res.status, 'GET', `/${bare}`, text, { service: SERVICE }));
     }

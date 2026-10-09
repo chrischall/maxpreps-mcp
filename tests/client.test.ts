@@ -138,6 +138,24 @@ describe('page fetching', () => {
     await expect(mk(impl).page('a/b')).rejects.toThrow(/rate|429/i);
   });
 
+  // Headers arriving is not the end of the request: a stalled body must still
+  // hit MAXPREPS_TIMEOUT_MS instead of hanging the tool call.
+  it('times out a response whose body stalls after the headers', async () => {
+    const stalled = () =>
+      new Response(new ReadableStream({ start: (ctl) => ctl.enqueue(new TextEncoder().encode('{"pageP')) }), {
+        status: 200,
+      });
+    const { impl } = stubFetch({ pages: { [dataUrl('BUILD1', 'a/b')]: stalled } });
+    await expect(mk(impl, { timeoutMs: 50 }).page('a/b')).rejects.toThrow(/unreachable|maxpreps/i);
+  });
+
+  it('times out a homepage whose body stalls while resolving the buildId', async () => {
+    const impl = vi.fn(
+      async () => new Response(new ReadableStream({ start: (ctl) => ctl.enqueue(new TextEncoder().encode('<html>')) })),
+    ) as unknown as typeof fetch;
+    await expect(mk(impl, { timeoutMs: 50 }).buildId()).rejects.toThrow(/unreachable|maxpreps/i);
+  });
+
   it('maps a network failure to an unreachable error', async () => {
     const impl = vi.fn(async (input: RequestInfo | URL) => {
       if (String(input) === 'https://www.maxpreps.com/') return html(HOME_HTML('BUILD1'));
