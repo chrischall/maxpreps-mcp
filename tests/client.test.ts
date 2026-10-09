@@ -218,6 +218,24 @@ describe('healthcheck', () => {
     expect(r).toMatchObject({ ok: true, buildId: 'B7' });
   });
 
+  // A cached search response must not stand in for a live data-route probe.
+  it('probes the data route live even when the probe response is cached', async () => {
+    let failing = false;
+    const { impl } = stubFetch({
+      buildId: 'B7',
+      onPage: (u) =>
+        u.startsWith(dataUrl('B7', 'search'))
+          ? failing
+            ? new Response('blocked', { status: 403 })
+            : json({ pageProps: { initialSchoolResults: [] } })
+          : undefined,
+    });
+    const c = new MaxPrepsClient({ fetchImpl: impl, throttle: (fn) => fn(), cacheTtlMs: 60_000 });
+    expect((await c.healthcheck()).ok).toBe(true);
+    failing = true;
+    expect((await c.healthcheck()).ok).toBe(false);
+  });
+
   it('reports not-ok instead of throwing when the site is unreachable', async () => {
     const impl = vi.fn(async () => {
       throw new TypeError('down');

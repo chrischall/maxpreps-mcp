@@ -253,8 +253,9 @@ export class MaxPrepsClient {
     const base = { service: SERVICE, origin: ORIGIN, version: VERSION, cachedEntries: this.cache.size };
     try {
       const buildId = await this.buildId(true);
-      // Prove the data routes answer, not just the homepage.
-      await this.page('search', { q: 'maxpreps' });
+      // Prove the data routes answer, not just the homepage. Bypass the
+      // response cache: a cached hit would report ok without touching the route.
+      await this.fetchPage('search', buildQueryString({ q: 'maxpreps' }), false);
       return { ok: true, ...base, buildId };
     } catch (e) {
       return { ok: false, ...base, error: e instanceof Error ? e.message : String(e) };
