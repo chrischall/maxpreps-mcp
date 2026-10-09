@@ -119,6 +119,36 @@ describe('page fetching', () => {
     expect(calls.filter((u) => u.includes('/NEW/'))).toHaveLength(1);
   });
 
+  // After a deploy, a request sent with the OLD id can 404 after another
+  // request has already refreshed the id. That id is now fresh, but this
+  // request's id is stale, so it must still retry with the current one.
+  it('retries a 404 on a superseded buildId even after another request refreshed it', async () => {
+    let current = 'OLD';
+    let now = 1_000_000;
+    let releaseP2: () => void = () => {};
+    const p2Gate = new Promise<void>((r) => (releaseP2 = r));
+    const calls: string[] = [];
+    const impl = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      calls.push(url);
+      if (url === 'https://www.maxpreps.com/') return html(HOME_HTML(current));
+      if (url.includes('/NEW/')) return json({ pageProps: { url } });
+      if (url.includes('/OLD/p2.json')) await p2Gate; // p2's OLD 404 arrives late
+      return new Response('not found', { status: 404 });
+    }) as unknown as typeof fetch;
+    const c = mk(impl, { now: () => now });
+    await c.buildId(); // prime with OLD
+    current = 'NEW'; // site deploys
+    now += 5 * 60 * 1000;
+    const p1 = c.page('p1');
+    const p2 = c.page('p2');
+    await expect(p1).resolves.toEqual({ url: dataUrl('NEW', 'p1') });
+    releaseP2();
+    await expect(p2).resolves.toEqual({ url: dataUrl('NEW', 'p2') });
+    // p2 reused p1's refreshed id instead of scraping again
+    expect(calls.filter((u) => u === 'https://www.maxpreps.com/')).toHaveLength(2);
+  });
+
   it('reports a genuine 404 as a not-found error, not an infinite retry', async () => {
     let now = 1_000_000;
     const { impl, calls } = stubFetch({});

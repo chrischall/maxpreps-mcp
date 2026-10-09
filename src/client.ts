@@ -188,8 +188,7 @@ export class MaxPrepsClient {
     try {
       return await run;
     } finally {
-      // Only clear the slot if it is still ours.
-      if (this.buildIdInFlight === run) this.buildIdInFlight = null;
+      this.buildIdInFlight = null;
     }
   }
 
@@ -242,9 +241,16 @@ export class MaxPrepsClient {
     // re-resolving once — but only when the id is old enough to plausibly be
     // stale, and only retrying the data route if the id actually changed.
     if (res.status === 404) {
-      if (!retried && this.now() - this.buildIdAt >= this.buildIdRefreshMinMs) {
-        const fresh = await this.buildId(true);
-        if (fresh !== buildId) return this.fetchPage(bare, qs, true);
+      if (!retried) {
+        // Another request already replaced the id this one used (a deploy
+        // raced it): retry with the current id, no scrape needed.
+        if (this.buildIdValue && this.buildIdValue !== buildId) {
+          return this.fetchPage(bare, qs, true);
+        }
+        if (this.now() - this.buildIdAt >= this.buildIdRefreshMinMs) {
+          const fresh = await this.buildId(true);
+          if (fresh !== buildId) return this.fetchPage(bare, qs, true);
+        }
       }
       throw createHelpfulError(`MaxPreps has no page at /${bare} (404).`, {
         hint: 'Check the path with maxpreps_search (schools) or maxpreps_list_teams (sport/gender/level segments) — they are not guessable.',

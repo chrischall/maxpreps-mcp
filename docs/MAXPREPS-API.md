@@ -42,7 +42,12 @@ A stale id 404s exactly like a bad path. `MaxPrepsClient` distinguishes them by
 re-resolving once and retrying; a second 404 means the path is genuinely wrong.
 It only re-scrapes when the id is over a minute old (a 404 on a just-resolved id
 is a bad path), shares one scrape between concurrent 404s, and skips the retry
-when the re-scraped id is unchanged.
+when the re-scraped id is unchanged. A 404 on an id that another request has
+already replaced retries straight away with the current id, whatever its age.
+
+Known limitation: if the site deploys less than a minute after the id was
+scraped, a 404 on the old id is reported as a bad path until that minute has
+passed (the next 404 after it re-scrapes and recovers).
 
 ## Paths
 
