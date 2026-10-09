@@ -40,6 +40,9 @@ the escape terminates the capture.
 
 A stale id 404s exactly like a bad path. `MaxPrepsClient` distinguishes them by
 re-resolving once and retrying; a second 404 means the path is genuinely wrong.
+It only re-scrapes when the id is over a minute old (a 404 on a just-resolved id
+is a bad path), shares one scrape between concurrent 404s, and skips the retry
+when the re-scraped id is unchanged.
 
 ## Paths
 

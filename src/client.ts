@@ -33,6 +33,9 @@ const DEFAULT_MIN_INTERVAL_MS = 250;
 const DEFAULT_TIMEOUT_MS = 20_000;
 // The buildId only changes when the site deploys; a stale one self-heals on 404.
 const DEFAULT_BUILD_ID_TTL_MS = 6 * 60 * 60 * 1000;
+// A 404 against a buildId scraped this recently is a bad path, not a deploy, so
+// it does not earn another homepage scrape.
+const DEFAULT_BUILD_ID_REFRESH_MIN_MS = 60 * 1000;
 const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
 const DEFAULT_CACHE_MAX = 200;
 
@@ -48,6 +51,8 @@ export interface ClientOptions {
   userAgent?: string;
   timeoutMs?: number;
   buildIdTtlMs?: number;
+  /** Minimum age of the buildId before a 404 may trigger a re-scrape. */
+  buildIdRefreshMinMs?: number;
   /** `0` disables the response cache (tests use this). */
   cacheTtlMs?: number;
   cacheMax?: number;
@@ -80,6 +85,7 @@ export class MaxPrepsClient {
   private readonly ua: string;
   private readonly timeoutMs: number;
   private readonly buildIdTtlMs: number;
+  private readonly buildIdRefreshMinMs: number;
   private readonly cacheTtlMs: number;
   private readonly cacheMax: number;
 
@@ -98,6 +104,7 @@ export class MaxPrepsClient {
       `maxpreps-mcp/${VERSION} (+https://github.com/chrischall/maxpreps-mcp)`;
     this.timeoutMs = opts.timeoutMs ?? numEnv('MAXPREPS_TIMEOUT_MS', DEFAULT_TIMEOUT_MS);
     this.buildIdTtlMs = opts.buildIdTtlMs ?? DEFAULT_BUILD_ID_TTL_MS;
+    this.buildIdRefreshMinMs = opts.buildIdRefreshMinMs ?? DEFAULT_BUILD_ID_REFRESH_MIN_MS;
     this.cacheTtlMs = opts.cacheTtlMs ?? numEnv('MAXPREPS_CACHE_TTL', DEFAULT_CACHE_TTL_MS / 1000) * 1000;
     this.cacheMax = opts.cacheMax ?? DEFAULT_CACHE_MAX;
     this.throttle =
@@ -149,13 +156,14 @@ export class MaxPrepsClient {
 
   /**
    * The Next.js build id, which every `_next/data` URL embeds. Cached for
-   * `buildIdTtlMs`; `force` bypasses the cache after a 404.
+   * `buildIdTtlMs`; `force` bypasses the cache after a 404. A scrape already
+   * in flight is fresh by definition, so even a forced caller joins it.
    */
   async buildId(force = false): Promise<string> {
     if (!force && this.buildIdValue && this.now() - this.buildIdAt < this.buildIdTtlMs) {
       return this.buildIdValue;
     }
-    if (!force && this.buildIdInFlight) return this.buildIdInFlight;
+    if (this.buildIdInFlight) return this.buildIdInFlight;
 
     const run = (async () => {
       const res = await this.send(`${ORIGIN}/`, 'text/html');
@@ -180,7 +188,8 @@ export class MaxPrepsClient {
     try {
       return await run;
     } finally {
-      this.buildIdInFlight = null;
+      // Only clear the slot if it is still ours.
+      if (this.buildIdInFlight === run) this.buildIdInFlight = null;
     }
   }
 
@@ -224,21 +233,27 @@ export class MaxPrepsClient {
     return props as T;
   }
 
-  private async fetchPage(bare: string, qs: string, refreshed: boolean): Promise<PageProps> {
-    const buildId = await this.buildId(refreshed);
+  private async fetchPage(bare: string, qs: string, retried: boolean): Promise<PageProps> {
+    const buildId = await this.buildId();
     const url = `${ORIGIN}/_next/data/${encodeURIComponent(buildId)}/${bare}.json${qs}`;
     const res = await this.send(url, 'application/json');
 
     // A stale buildId 404s exactly like a bad path, so distinguish them by
-    // re-resolving once: if a fresh id still 404s, the path is genuinely wrong.
+    // re-resolving once — but only when the id is old enough to plausibly be
+    // stale, and only retrying the data route if the id actually changed.
     if (res.status === 404) {
-      if (!refreshed) return this.fetchPage(bare, qs, true);
+      if (!retried && this.now() - this.buildIdAt >= this.buildIdRefreshMinMs) {
+        const fresh = await this.buildId(true);
+        if (fresh !== buildId) return this.fetchPage(bare, qs, true);
+      }
       throw createHelpfulError(`MaxPreps has no page at /${bare} (404).`, {
         hint: 'Check the path with maxpreps_search (schools) or maxpreps_list_teams (sport/gender/level segments) — they are not guessable.',
       });
     }
     if (res.status === 429 || res.status === 503) {
       const retryAfter = Number(res.headers.get('retry-after'));
+      // A bare 503 is maintenance or an outage, not a request to slow down.
+      if (res.status === 503 && !(retryAfter > 0)) throw new UnreachableError(SERVICE, 503);
       throw new RateLimitError(SERVICE, retryAfter > 0 ? retryAfter : undefined);
     }
     const text = res.text;
