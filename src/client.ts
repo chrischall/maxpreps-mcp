@@ -33,6 +33,9 @@ const DEFAULT_MIN_INTERVAL_MS = 250;
 const DEFAULT_TIMEOUT_MS = 20_000;
 // The buildId only changes when the site deploys; a stale one self-heals on 404.
 const DEFAULT_BUILD_ID_TTL_MS = 6 * 60 * 60 * 1000;
+// A 404 against a buildId scraped this recently is a bad path, not a deploy, so
+// it does not earn another homepage scrape.
+const DEFAULT_BUILD_ID_REFRESH_MIN_MS = 60 * 1000;
 const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000;
 const DEFAULT_CACHE_MAX = 200;
 
@@ -48,9 +51,19 @@ export interface ClientOptions {
   userAgent?: string;
   timeoutMs?: number;
   buildIdTtlMs?: number;
+  /** Minimum age of the buildId before a 404 may trigger a re-scrape. */
+  buildIdRefreshMinMs?: number;
   /** `0` disables the response cache (tests use this). */
   cacheTtlMs?: number;
   cacheMax?: number;
+}
+
+/** A fully-read response: status, headers and the body text. */
+interface Fetched {
+  status: number;
+  ok: boolean;
+  headers: Headers;
+  text: string;
 }
 
 interface CacheEntry {
@@ -72,6 +85,7 @@ export class MaxPrepsClient {
   private readonly ua: string;
   private readonly timeoutMs: number;
   private readonly buildIdTtlMs: number;
+  private readonly buildIdRefreshMinMs: number;
   private readonly cacheTtlMs: number;
   private readonly cacheMax: number;
 
@@ -90,6 +104,7 @@ export class MaxPrepsClient {
       `maxpreps-mcp/${VERSION} (+https://github.com/chrischall/maxpreps-mcp)`;
     this.timeoutMs = opts.timeoutMs ?? numEnv('MAXPREPS_TIMEOUT_MS', DEFAULT_TIMEOUT_MS);
     this.buildIdTtlMs = opts.buildIdTtlMs ?? DEFAULT_BUILD_ID_TTL_MS;
+    this.buildIdRefreshMinMs = opts.buildIdRefreshMinMs ?? DEFAULT_BUILD_ID_REFRESH_MIN_MS;
     this.cacheTtlMs = opts.cacheTtlMs ?? numEnv('MAXPREPS_CACHE_TTL', DEFAULT_CACHE_TTL_MS / 1000) * 1000;
     this.cacheMax = opts.cacheMax ?? DEFAULT_CACHE_MAX;
     this.throttle =
@@ -101,18 +116,37 @@ export class MaxPrepsClient {
     return this.cache.size;
   }
 
-  private async send(url: string, accept: string): Promise<Response> {
+  /**
+   * GET `url` and read its whole body under one deadline. `fetch` resolves as
+   * soon as headers arrive, so the timeout has to cover `text()` too or a body
+   * that stalls mid-stream hangs the tool call past `MAXPREPS_TIMEOUT_MS`.
+   */
+  private async send(url: string, accept: string): Promise<Fetched> {
     return this.throttle(async () => {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), this.timeoutMs);
-      try {
-        return await this.fetchImpl(url, {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const deadline = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          controller.abort();
+          reject(new Error('timeout'));
+        }, this.timeoutMs);
+      });
+      const request = (async (): Promise<Fetched> => {
+        const res = await this.fetchImpl(url, {
           headers: { 'User-Agent': this.ua, Accept: accept },
           signal: controller.signal,
           redirect: 'follow',
         });
+        const text = await res.text();
+        return { status: res.status, ok: res.ok, headers: res.headers, text };
+      })();
+      // Swallow the loser's rejection so an abort after a win is not unhandled.
+      request.catch(() => {});
+      try {
+        return await Promise.race([request, deadline]);
       } catch {
-        // AbortError and a genuine network failure are the same story to a caller.
+        // AbortError, a stalled body and a genuine network failure are the same
+        // story to a caller.
         throw new UnreachableError(SERVICE);
       } finally {
         clearTimeout(timer);
@@ -122,13 +156,14 @@ export class MaxPrepsClient {
 
   /**
    * The Next.js build id, which every `_next/data` URL embeds. Cached for
-   * `buildIdTtlMs`; `force` bypasses the cache after a 404.
+   * `buildIdTtlMs`; `force` bypasses the cache after a 404. A scrape already
+   * in flight is fresh by definition, so even a forced caller joins it.
    */
   async buildId(force = false): Promise<string> {
     if (!force && this.buildIdValue && this.now() - this.buildIdAt < this.buildIdTtlMs) {
       return this.buildIdValue;
     }
-    if (!force && this.buildIdInFlight) return this.buildIdInFlight;
+    if (this.buildIdInFlight) return this.buildIdInFlight;
 
     const run = (async () => {
       const res = await this.send(`${ORIGIN}/`, 'text/html');
@@ -138,7 +173,7 @@ export class MaxPrepsClient {
             ' (while resolving the site buildId)',
         );
       }
-      const match = BUILD_ID_RE.exec(await res.text());
+      const match = BUILD_ID_RE.exec(res.text);
       if (!match) {
         throw createHelpfulError('Could not find a buildId on the MaxPreps homepage.', {
           hint: 'MaxPreps changed its page shape, so the _next/data JSON routes cannot be addressed. The server needs updating.',
@@ -197,24 +232,37 @@ export class MaxPrepsClient {
     return props as T;
   }
 
-  private async fetchPage(bare: string, qs: string, refreshed: boolean): Promise<PageProps> {
-    const buildId = await this.buildId(refreshed);
+  private async fetchPage(bare: string, qs: string, retried: boolean): Promise<PageProps> {
+    const buildId = await this.buildId();
     const url = `${ORIGIN}/_next/data/${encodeURIComponent(buildId)}/${bare}.json${qs}`;
     const res = await this.send(url, 'application/json');
 
     // A stale buildId 404s exactly like a bad path, so distinguish them by
-    // re-resolving once: if a fresh id still 404s, the path is genuinely wrong.
+    // re-resolving once — but only when the id is old enough to plausibly be
+    // stale, and only retrying the data route if the id actually changed.
     if (res.status === 404) {
-      if (!refreshed) return this.fetchPage(bare, qs, true);
+      if (!retried) {
+        // Another request already replaced the id this one used (a deploy
+        // raced it): retry with the current id, no scrape needed.
+        if (this.buildIdValue && this.buildIdValue !== buildId) {
+          return this.fetchPage(bare, qs, true);
+        }
+        if (this.now() - this.buildIdAt >= this.buildIdRefreshMinMs) {
+          const fresh = await this.buildId(true);
+          if (fresh !== buildId) return this.fetchPage(bare, qs, true);
+        }
+      }
       throw createHelpfulError(`MaxPreps has no page at /${bare} (404).`, {
         hint: 'Check the path with maxpreps_search (schools) or maxpreps_list_teams (sport/gender/level segments) — they are not guessable.',
       });
     }
     if (res.status === 429 || res.status === 503) {
       const retryAfter = Number(res.headers.get('retry-after'));
+      // A bare 503 is maintenance or an outage, not a request to slow down.
+      if (res.status === 503 && !(retryAfter > 0)) throw new UnreachableError(SERVICE, 503);
       throw new RateLimitError(SERVICE, retryAfter > 0 ? retryAfter : undefined);
     }
-    const text = await res.text();
+    const text = res.text;
     if (!res.ok) {
       throw new McpToolError(formatApiError(res.status, 'GET', `/${bare}`, text, { service: SERVICE }));
     }
@@ -253,8 +301,9 @@ export class MaxPrepsClient {
     const base = { service: SERVICE, origin: ORIGIN, version: VERSION, cachedEntries: this.cache.size };
     try {
       const buildId = await this.buildId(true);
-      // Prove the data routes answer, not just the homepage.
-      await this.page('search', { q: 'maxpreps' });
+      // Prove the data routes answer, not just the homepage. Bypass the
+      // response cache: a cached hit would report ok without touching the route.
+      await this.fetchPage('search', buildQueryString({ q: 'maxpreps' }), false);
       return { ok: true, ...base, buildId };
     } catch (e) {
       return { ok: false, ...base, error: e instanceof Error ? e.message : String(e) };

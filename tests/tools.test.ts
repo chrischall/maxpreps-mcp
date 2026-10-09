@@ -61,6 +61,17 @@ describe('maxpreps_get_schedule', () => {
     expect(r.games.every((g: any) => !g.hasResult)).toBe(true);
   });
 
+  // Soft-deleted rows are usually duplicates the site hides; includeDeleted
+  // only changes which games are listed, never the season record.
+  it('keeps soft-deleted contests out of the record when includeDeleted is set', async () => {
+    page.mockResolvedValue(fixture('schedule-mater-dei-bb-25-26.json'));
+    const visible = await call('maxpreps_get_schedule', { team: 'ca/x/y/basketball' });
+    const withDeleted = await call('maxpreps_get_schedule', { team: 'ca/x/y/basketball', includeDeleted: true });
+    expect(withDeleted.count).toBeGreaterThan(visible.count);
+    expect(withDeleted.games.some((g: any) => g.isDeleted && g.hasResult)).toBe(true);
+    expect(withDeleted.record).toEqual(visible.record);
+  });
+
   it('filters to completed games', async () => {
     const r = await call('maxpreps_get_schedule', { team: 'nc/x/y/football', played: 'completed' });
     expect(r.count).toBe(12);

@@ -48,7 +48,9 @@ export function registerScheduleTools(server: McpServer): void {
             ? all.filter((g) => !g.hasResult)
             : all;
 
-      const completed = all.filter((g) => g.hasResult);
+      // The record always counts only the games the site shows: soft-deleted
+      // rows are usually duplicates, so includeDeleted changes the listing only.
+      const completed = all.filter((g) => g.hasResult && !g.isDeleted);
       const record = {
         wins: completed.filter((g) => g.result === 'W').length,
         losses: completed.filter((g) => g.result === 'L').length,

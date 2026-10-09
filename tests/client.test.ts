@@ -105,23 +105,104 @@ describe('page fetching', () => {
   // The whole point of caching the buildId is that it goes stale on every deploy.
   it('refreshes a stale buildId once on 404 and retries', async () => {
     let current = 'OLD';
+    let now = 1_000_000;
     const { impl, calls } = stubFetch({
       buildId: () => current,
       onPage: (u) => (u.includes('/NEW/') ? json({ pageProps: { ok: true } }) : undefined),
     });
-    const c = mk(impl);
+    const c = mk(impl, { now: () => now });
     await c.buildId(); // prime the cache with OLD
     current = 'NEW'; // site deploys
+    now += 5 * 60 * 1000; // ...some minutes later
     await expect(c.page('a/b')).resolves.toEqual({ ok: true });
     expect(calls.filter((u) => u.includes('/OLD/'))).toHaveLength(1);
     expect(calls.filter((u) => u.includes('/NEW/'))).toHaveLength(1);
   });
 
+  // After a deploy, a request sent with the OLD id can 404 after another
+  // request has already refreshed the id. That id is now fresh, but this
+  // request's id is stale, so it must still retry with the current one.
+  it('retries a 404 on a superseded buildId even after another request refreshed it', async () => {
+    let current = 'OLD';
+    let now = 1_000_000;
+    let releaseP2: () => void = () => {};
+    const p2Gate = new Promise<void>((r) => (releaseP2 = r));
+    const calls: string[] = [];
+    const impl = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      calls.push(url);
+      if (url === 'https://www.maxpreps.com/') return html(HOME_HTML(current));
+      if (url.includes('/NEW/')) return json({ pageProps: { url } });
+      if (url.includes('/OLD/p2.json')) await p2Gate; // p2's OLD 404 arrives late
+      return new Response('not found', { status: 404 });
+    }) as unknown as typeof fetch;
+    const c = mk(impl, { now: () => now });
+    await c.buildId(); // prime with OLD
+    current = 'NEW'; // site deploys
+    now += 5 * 60 * 1000;
+    const p1 = c.page('p1');
+    const p2 = c.page('p2');
+    await expect(p1).resolves.toEqual({ url: dataUrl('NEW', 'p1') });
+    releaseP2();
+    await expect(p2).resolves.toEqual({ url: dataUrl('NEW', 'p2') });
+    // p2 reused p1's refreshed id instead of scraping again
+    expect(calls.filter((u) => u === 'https://www.maxpreps.com/')).toHaveLength(2);
+  });
+
   it('reports a genuine 404 as a not-found error, not an infinite retry', async () => {
+    let now = 1_000_000;
     const { impl, calls } = stubFetch({});
-    await expect(mk(impl).page('no/such/page')).rejects.toThrow(/not found|404/i);
-    // one attempt on the primed id, one after the refresh — never more
+    const c = mk(impl, { now: () => now });
+    await c.buildId();
+    now += 5 * 60 * 1000;
+    await expect(c.page('no/such/page')).rejects.toThrow(/no page|404/i);
+    // the refreshed id came back unchanged, so the path is wrong: no retry
+    expect(calls.filter((u) => u.includes('/_next/data/'))).toHaveLength(1);
+    expect(calls.filter((u) => u === 'https://www.maxpreps.com/')).toHaveLength(2);
+  });
+
+  // Agents guess paths. A 404 on an id resolved moments ago is a bad path, not
+  // a deploy — re-scraping the homepage for each one is impolite traffic.
+  it('does not re-scrape the homepage for a 404 on a freshly resolved buildId', async () => {
+    const { impl, calls } = stubFetch({});
+    const c = mk(impl);
+    await expect(c.page('guess/one')).rejects.toThrow(/no page|404/i);
+    await expect(c.page('guess/two')).rejects.toThrow(/no page|404/i);
+    expect(calls.filter((u) => u === 'https://www.maxpreps.com/')).toHaveLength(1);
     expect(calls.filter((u) => u.includes('/_next/data/'))).toHaveLength(2);
+  });
+
+  it('single-flights concurrent forced refreshes after 404s', async () => {
+    let now = 1_000_000;
+    const { impl, calls } = stubFetch({});
+    const c = mk(impl, { now: () => now });
+    await c.buildId();
+    now += 5 * 60 * 1000;
+    await Promise.all(
+      ['x/1', 'x/2', 'x/3'].map((p) => expect(c.page(p)).rejects.toThrow(/no page|404/i)),
+    );
+    expect(calls.filter((u) => u === 'https://www.maxpreps.com/')).toHaveLength(2);
+  });
+
+  it('joins a pending scrape instead of starting a second forced one', async () => {
+    // Homepage A resolves only when released; any later scrape would return B.
+    let releaseA: () => void = () => {};
+    let n = 0;
+    const impl = vi.fn(async () => {
+      n += 1;
+      if (n === 1) {
+        await new Promise<void>((r) => (releaseA = r));
+        return html(HOME_HTML('A'));
+      }
+      return html(HOME_HTML('B'));
+    }) as unknown as typeof fetch;
+    const c = mk(impl);
+    const first = c.buildId(true);
+    const second = c.buildId(true);
+    releaseA();
+    await expect(first).resolves.toBe('A');
+    await expect(second).resolves.toBe('A');
+    expect(n).toBe(1);
   });
 
   it('surfaces a non-JSON 2xx as an upstream error rather than JSON.parse noise', async () => {
@@ -136,6 +217,43 @@ describe('page fetching', () => {
       pages: { [dataUrl('BUILD1', 'a/b')]: () => new Response('slow down', { status: 429 }) },
     });
     await expect(mk(impl).page('a/b')).rejects.toThrow(/rate|429/i);
+  });
+
+  // Headers arriving is not the end of the request: a stalled body must still
+  // hit MAXPREPS_TIMEOUT_MS instead of hanging the tool call.
+  it('times out a response whose body stalls after the headers', async () => {
+    const stalled = () =>
+      new Response(new ReadableStream({ start: (ctl) => ctl.enqueue(new TextEncoder().encode('{"pageP')) }), {
+        status: 200,
+      });
+    const { impl } = stubFetch({ pages: { [dataUrl('BUILD1', 'a/b')]: stalled } });
+    await expect(mk(impl, { timeoutMs: 50 }).page('a/b')).rejects.toThrow(/unreachable|maxpreps/i);
+  });
+
+  it('times out a homepage whose body stalls while resolving the buildId', async () => {
+    const impl = vi.fn(
+      async () => new Response(new ReadableStream({ start: (ctl) => ctl.enqueue(new TextEncoder().encode('<html>')) })),
+    ) as unknown as typeof fetch;
+    await expect(mk(impl, { timeoutMs: 50 }).buildId()).rejects.toThrow(/unreachable|maxpreps/i);
+  });
+
+  it('maps a 503 without Retry-After to unreachable, not a rate limit', async () => {
+    const { impl } = stubFetch({
+      pages: { [dataUrl('BUILD1', 'a/b')]: () => new Response('maintenance', { status: 503 }) },
+    });
+    const err = await mk(impl).page('a/b').catch((e) => e);
+    expect(err.name).toBe('UnreachableError');
+    expect(err.message).toMatch(/unreachable/i);
+    expect(err.message).not.toMatch(/rate limit/i);
+  });
+
+  it('keeps a 503 that carries Retry-After as a rate limit', async () => {
+    const { impl } = stubFetch({
+      pages: {
+        [dataUrl('BUILD1', 'a/b')]: () => new Response('busy', { status: 503, headers: { 'retry-after': '30' } }),
+      },
+    });
+    await expect(mk(impl).page('a/b')).rejects.toThrow(/rate limited.*30s/i);
   });
 
   it('maps a network failure to an unreachable error', async () => {
@@ -216,6 +334,24 @@ describe('healthcheck', () => {
     });
     const r = await mk(impl).healthcheck();
     expect(r).toMatchObject({ ok: true, buildId: 'B7' });
+  });
+
+  // A cached search response must not stand in for a live data-route probe.
+  it('probes the data route live even when the probe response is cached', async () => {
+    let failing = false;
+    const { impl } = stubFetch({
+      buildId: 'B7',
+      onPage: (u) =>
+        u.startsWith(dataUrl('B7', 'search'))
+          ? failing
+            ? new Response('blocked', { status: 403 })
+            : json({ pageProps: { initialSchoolResults: [] } })
+          : undefined,
+    });
+    const c = new MaxPrepsClient({ fetchImpl: impl, throttle: (fn) => fn(), cacheTtlMs: 60_000 });
+    expect((await c.healthcheck()).ok).toBe(true);
+    failing = true;
+    expect((await c.healthcheck()).ok).toBe(false);
   });
 
   it('reports not-ok instead of throwing when the site is unreachable', async () => {

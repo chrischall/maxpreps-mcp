@@ -164,7 +164,16 @@ export function decodeRoster(pageProps: Props, opts: DecodeOptions = {}): Roster
       };
     })
     .filter((p) => opts.includeDeleted || !p.isDeleted)
-    .sort((a, b) => (Number(a.jersey) || Number.MAX_SAFE_INTEGER) - (Number(b.jersey) || Number.MAX_SAFE_INTEGER));
+    .sort((a, b) => jerseySortKey(a.jersey) - jerseySortKey(b.jersey));
+}
+
+/**
+ * Numeric sort key for a jersey. `#0` is a real number, so fall back only when
+ * the jersey is blank or non-numeric — never on a falsy `0`.
+ */
+function jerseySortKey(jersey: string | null): number {
+  const n = jersey != null && jersey.trim() !== '' ? Number(jersey) : NaN;
+  return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
 }
 
 /** Decode `pageProps.contests` from a team schedule page. */

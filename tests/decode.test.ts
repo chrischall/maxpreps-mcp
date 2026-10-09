@@ -88,6 +88,25 @@ describe('decodeRoster', () => {
     expect(jerseys).toEqual([...jerseys].sort((a, b) => a - b));
   });
 
+  // #0 is a real jersey (common in basketball). Number('0') is falsy, so a
+  // `|| MAX` fallback used to sort it after every numbered player.
+  it('sorts an active #0 first and blank jerseys last', () => {
+    const J = ROSTER_KEYS.indexOf('jersey');
+    const D = ROSTER_KEYS.indexOf('isDeleted');
+    const F = ROSTER_KEYS.indexOf('firstName');
+    const row = (first: string, jersey: string | null) => {
+      const r = [...mpRoster.athleteData[0]];
+      r[F] = first;
+      r[J] = jersey;
+      r[D] = false;
+      return r;
+    };
+    const props = {
+      athleteData: [row('Seven', '7'), row('Blank', ''), row('Zero', '0'), row('None', null), row('DoubleZero', '00'), row('Two', '2')],
+    };
+    expect(decodeRoster(props).map((p) => p.firstName)).toEqual(['Zero', 'DoubleZero', 'Two', 'Seven', 'Blank', 'None']);
+  });
+
   it('leaves height null when the school published no measurements', () => {
     const all = decodeRoster(mpRoster, { includeDeleted: true });
     const unmeasured = all.find((p) => p.heightFeet === null);
