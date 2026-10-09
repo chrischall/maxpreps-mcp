@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.8](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.7...v1.1.8) (2026-10-09)
+
+
+### Bug Fixes
+
+* declare the plugin MCP config under the mcpServers key Claude Code reads ([#96](https://github.com/chrischall/maxpreps-mcp/issues/96)) ([31fe388](https://github.com/chrischall/maxpreps-mcp/commit/31fe388f90401079698703520d8097e403fd6268))
+* **deps:** update @chrischall/mcp-utils to 3.0.0 ([#95](https://github.com/chrischall/maxpreps-mcp/issues/95)) ([3d78423](https://github.com/chrischall/maxpreps-mcp/commit/3d784230ea949ecde230106772173af988b65bbb))
+* resolve low-severity audit findings ([#92](https://github.com/chrischall/maxpreps-mcp/issues/92)) ([926a78e](https://github.com/chrischall/maxpreps-mcp/commit/926a78eff1620e6130b4156d8226249d66ffdb16))
+
+
+### Documentation
+
+* make the .mcpbignore skill comment repo-agnostic ([#94](https://github.com/chrischall/maxpreps-mcp/issues/94)) ([735929b](https://github.com/chrischall/maxpreps-mcp/commit/735929b9ac8fec75e15047c345a12bf29c497a5d))
+
 ## [1.1.7](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.6...v1.1.7) (2026-10-07)
 
 
