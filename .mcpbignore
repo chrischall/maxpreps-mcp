@@ -37,9 +37,9 @@ CLAUDE.md
 *.yml
 
 # Registry / plugin / skill manifests (not used at runtime).
-# Root SKILL.md stays ignored: release-please.yml stages a copy of
-# skills/musicbrainz-mcp/SKILL.md at the root for mcp-publish, and mcpb
-# pack runs after that staging step.
+# Root SKILL.md stays ignored: the skill lives at skills/<name>/SKILL.md,
+# and any root-level copy staged for mcp-publish must not reach the .mcpb
+# (mcpb pack runs after the publish staging steps).
 server.json
 plugin.json
 .claude-plugin/
