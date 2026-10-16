@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "maxpreps": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "maxpreps-mcp"],
       "env": {
         "MAXPREPS_USER_AGENT": "${MAXPREPS_USER_AGENT}",
         "MAXPREPS_CACHE_TTL": "${MAXPREPS_CACHE_TTL}",

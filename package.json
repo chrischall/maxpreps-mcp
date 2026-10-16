@@ -42,7 +42,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@chrischall/mcp-utils": "^3.0.0",
+    "@chrischall/mcp-utils": "^3.0.3",
     "@modelcontextprotocol/server": "^2.3.0",
     "dotenv": "^18.0.2",
     "zod": "^4.6.5"
@@ -56,6 +56,6 @@
     "vitest": "^5.0.0"
   },
   "allowScripts": {
-    "esbuild@0.28.1": true
+    "esbuild@0.28.2": true
   }
 }
