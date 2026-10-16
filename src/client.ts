@@ -10,6 +10,8 @@ import {
   RateLimitError,
   UnreachableError,
   createThrottle,
+  currentCallSignal,
+  withAmbientCancellation,
   type Throttle,
 } from '@chrischall/mcp-utils';
 import { VERSION } from './version.js';
@@ -123,18 +125,30 @@ export class MaxPrepsClient {
    */
   private async send(url: string, accept: string): Promise<Fetched> {
     return this.throttle(async () => {
+      // The running tool call's cancellation (ambient, set by mcp-utils around
+      // every call) is folded into the deadline, so a cancelled call stops its
+      // request — and is reported as the cancellation, not as MaxPreps being
+      // unreachable.
+      const caller = currentCallSignal();
+      if (caller?.aborted) throw cancellation(caller);
       const controller = new AbortController();
+      const signal = withAmbientCancellation(controller.signal)!;
       let timer: ReturnType<typeof setTimeout> | undefined;
+      let onCancel: (() => void) | undefined;
       const deadline = new Promise<never>((_, reject) => {
         timer = setTimeout(() => {
           controller.abort();
           reject(new Error('timeout'));
         }, this.timeoutMs);
+        if (caller) {
+          onCancel = () => reject(cancellation(caller));
+          caller.addEventListener('abort', onCancel, { once: true });
+        }
       });
       const request = (async (): Promise<Fetched> => {
         const res = await this.fetchImpl(url, {
           headers: { 'User-Agent': this.ua, Accept: accept },
-          signal: controller.signal,
+          signal,
           redirect: 'follow',
         });
         const text = await res.text();
@@ -145,11 +159,13 @@ export class MaxPrepsClient {
       try {
         return await Promise.race([request, deadline]);
       } catch {
-        // AbortError, a stalled body and a genuine network failure are the same
+        if (caller?.aborted) throw cancellation(caller);
+        // A timeout, a stalled body and a genuine network failure are the same
         // story to a caller.
         throw new UnreachableError(SERVICE);
       } finally {
         clearTimeout(timer);
+        if (onCancel) caller!.removeEventListener('abort', onCancel);
       }
     });
   }
@@ -317,3 +333,12 @@ export class MaxPrepsClient {
  * boots and every tool is usable out of the box.
  */
 export const client = new MaxPrepsClient();
+
+/** The caller's abort reason as an Error (an AbortError when it carries none). */
+function cancellation(caller: AbortSignal): Error {
+  const reason: unknown = caller.reason;
+  if (reason instanceof Error) return reason;
+  const err = new Error('The tool call was cancelled.');
+  err.name = 'AbortError';
+  return err;
+}

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { withCallSignal } from '@chrischall/mcp-utils';
 import { MaxPrepsClient } from '../src/client.js';
 
 const HOME_HTML = (buildId: string) =>
@@ -235,6 +236,35 @@ describe('page fetching', () => {
       async () => new Response(new ReadableStream({ start: (ctl) => ctl.enqueue(new TextEncoder().encode('<html>')) })),
     ) as unknown as typeof fetch;
     await expect(mk(impl, { timeoutMs: 50 }).buildId()).rejects.toThrow(/unreachable|maxpreps/i);
+  });
+
+  // A cancelled tool call must stop its request, and must not be reported as
+  // "MaxPreps unreachable" — the site is fine, the caller gave up.
+  it('aborts the request when the tool call is cancelled and reports the cancellation', async () => {
+    let seen: AbortSignal | undefined;
+    const impl = vi.fn(
+      (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          seen = init?.signal ?? undefined;
+          init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        }),
+    ) as unknown as typeof fetch;
+    const controller = new AbortController();
+    const pending = withCallSignal(controller.signal, () => mk(impl, { timeoutMs: 1_000 }).buildId());
+    setTimeout(() => controller.abort(), 5);
+    const err = (await pending.catch((e: unknown) => e)) as Error;
+    expect(seen?.aborted).toBe(true);
+    expect(err.name).toBe('AbortError');
+    expect(err.name).not.toBe('UnreachableError');
+  });
+
+  it('does not start a request for a call that was already cancelled', async () => {
+    const impl = vi.fn(async () => html(HOME_HTML('B'))) as unknown as typeof fetch;
+    const controller = new AbortController();
+    controller.abort();
+    const err = (await withCallSignal(controller.signal, () => mk(impl).buildId()).catch((e: unknown) => e)) as Error;
+    expect(err.name).toBe('AbortError');
+    expect(impl).not.toHaveBeenCalled();
   });
 
   it('maps a 503 without Retry-After to unreachable, not a rate limit', async () => {
