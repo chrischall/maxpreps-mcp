@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.10](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.9...v1.1.10) (2026-10-17)
+
+
+### Bug Fixes
+
+* **deps:** bump dotenv ([#104](https://github.com/chrischall/maxpreps-mcp/issues/104)) ([a15241c](https://github.com/chrischall/maxpreps-mcp/commit/a15241c11b38c2e597d3278d111e5cc6de8d6d75))
+
 ## [1.1.9](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.8...v1.1.9) (2026-10-16)
 
 
