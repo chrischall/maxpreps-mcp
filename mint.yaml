@@ -4,6 +4,19 @@ slug: maxpreps
 summary: >-
   Look up any US high school on MaxPreps — team schedules, scores, records,
   rosters, stat leaders and athlete careers
+examples:
+  - prompt: >-
+      What's Myers Park High School's varsity football record this season, and
+      what were the scores of their last three games?
+    note: Uses search, team list, team overview and schedule
+  - prompt: >-
+      Where does Mater Dei's varsity football team rank nationally and in
+      California right now?
+    note: Reads the team's published national and state rankings
+  - prompt: >-
+      Show me the conference standings for Myers Park varsity boys basketball
+      last season.
+    note: Prior seasons work too; current seasons may be empty before opening day
 env:
   - name: MAXPREPS_USER_AGENT
     required: false
