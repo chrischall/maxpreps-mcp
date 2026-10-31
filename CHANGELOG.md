@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.10](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.9...v1.1.10) (2026-10-31)
+
+
+### Bug Fixes
+
+* **deps:** bump @chrischall/mcp-utils ([#108](https://github.com/chrischall/maxpreps-mcp/issues/108)) ([26b1632](https://github.com/chrischall/maxpreps-mcp/commit/26b163242eb92fb8ea9d189aa07d015ee1169c5c))
+* **deps:** bump dotenv ([#104](https://github.com/chrischall/maxpreps-mcp/issues/104)) ([a15241c](https://github.com/chrischall/maxpreps-mcp/commit/a15241c11b38c2e597d3278d111e5cc6de8d6d75))
+* **deps:** bump the production-dependencies group with 3 updates ([#110](https://github.com/chrischall/maxpreps-mcp/issues/110)) ([1a4e905](https://github.com/chrischall/maxpreps-mcp/commit/1a4e90560eacc1cfed74c5e351ca61c2ab3d0f57))
+
+
+### Documentation
+
+* **mint:** add sample prompts for the public catalog ([#106](https://github.com/chrischall/maxpreps-mcp/issues/106)) ([81942ee](https://github.com/chrischall/maxpreps-mcp/commit/81942ee2f03b0126ffebdec35207dbf455e0c482))
+
 ## [1.1.9](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.8...v1.1.9) (2026-10-16)
 
 
