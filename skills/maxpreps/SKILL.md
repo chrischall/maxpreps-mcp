@@ -75,6 +75,17 @@ every season with its `year`, or read `.seasons` from `mpx team <team-path>`.
 - **Statewide scoreboards are not in the JSON.** `/<st>/<sport>/scores/` returns only page chrome — the game list is hydrated by a route that never fires server-side. Get scores per-team from `schedule` instead; don't claim a state had no games.
 - Search is strict — `"myers park high"` returns zero, `"myers park"` returns the school. Drop qualifiers and retry before concluding a school is absent.
 
+## In context groups
+
+maxpreps-mcp joins the **school** group with `lookup` hints only (aliases like "game",
+"score", "roster", "ranked"). It declares **no canonical read and no subject**: every read
+needs a school or team path the person names, and MaxPreps has no account to list "my" teams
+from, so it cannot answer "what's on at school this week?" alone. A compound ask such as
+"what's due at school — and when is the varsity football game?" is answered by the group's
+canonical reads for the first half and by `maxpreps_search` → `maxpreps_list_teams` →
+`maxpreps_get_schedule` (`played: upcoming`) for the named team. No browser bridge is
+involved, so it never answers "needs your browser open".
+
 Read-only and low-volume by design; there is no write path. See `references/recipes.md` for
 field shapes, the positional key maps, and ready-to-run jq.
 

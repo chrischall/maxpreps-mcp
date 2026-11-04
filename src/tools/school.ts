@@ -4,6 +4,7 @@ import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl } from '../paths.js';
 import { extractTeams } from '../teams.js';
+import { schoolMeta } from './hints.js';
 
 const schoolArg = z
   .string()
@@ -24,6 +25,7 @@ export function registerSchoolTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
+      _meta: schoolMeta('lookup', { aliases: ['high school', 'school profile'] }),
       inputSchema: z.object({
         school: schoolArg,
         includeNearby: z.boolean().default(false).describe('Include the nearby-schools list'),
@@ -56,6 +58,7 @@ export function registerSchoolTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
+      _meta: schoolMeta('lookup', { aliases: ['teams', 'sports', 'varsity', 'jv'] }),
       inputSchema: z.object({
         school: schoolArg,
         sport: z.string().optional().describe('Case-insensitive filter on the sport name, e.g. "football"'),

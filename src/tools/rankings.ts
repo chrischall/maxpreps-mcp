@@ -4,6 +4,7 @@ import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildRankingsPath, buildTeamPath, SEASON_RE } from '../paths.js';
 import { teamArg, seasonArg } from './team.js';
+import { schoolMeta } from './hints.js';
 
 const PAGE_SIZE = 25;
 
@@ -38,6 +39,7 @@ export function registerRankingsTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
+      _meta: schoolMeta('lookup', { aliases: ['rankings', 'ranked', 'top teams', 'top 25'] }),
       inputSchema: z.object({
         sport: z.string().min(1).describe('Sport slug as used in MaxPreps URLs, e.g. football, basketball'),
         state: z
@@ -112,6 +114,7 @@ export function registerRankingsTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
+      _meta: schoolMeta('lookup', { aliases: ['ranked', 'state rank', 'national rank'] }),
       inputSchema: z.object({
         team: teamArg,
         season: seasonArg,

@@ -4,6 +4,7 @@ import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl, buildStatLeadersIndexPath, SEASON_RE } from '../paths.js';
 import { decodeStatLeaders } from '../decode.js';
+import { schoolMeta } from './hints.js';
 
 const SPORT_RE = /^[a-z0-9-]+$/;
 
@@ -38,6 +39,7 @@ export function registerStatLeaderTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
+      _meta: schoolMeta('lookup', { aliases: ['stat categories'] }),
       inputSchema: z.object({
         sport: sportArg.describe('Sport slug as used in MaxPreps URLs, e.g. football'),
         state: stateArg,
@@ -97,6 +99,7 @@ export function registerStatLeaderTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
+      _meta: schoolMeta('lookup', { aliases: ['leaderboard', 'state leaders', 'stat leaders'] }),
       inputSchema: z.object({
         path: z
           .string()

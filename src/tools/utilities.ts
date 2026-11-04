@@ -4,6 +4,7 @@ import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl } from '../paths.js';
 import { decodeRoster } from '../decode.js';
+import { schoolMeta } from './hints.js';
 
 export function registerUtilityTools(server: McpServer): void {
   server.registerTool(
@@ -41,6 +42,7 @@ export function registerUtilityTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
+      _meta: schoolMeta('lookup'),
       inputSchema: z.object({
         path: z.string().min(1).describe('Site path or maxpreps.com URL'),
         keysOnly: z

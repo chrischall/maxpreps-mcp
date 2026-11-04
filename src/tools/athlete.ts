@@ -3,6 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import { createHelpfulError, minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { parseSiteUrl } from '../paths.js';
+import { schoolMeta } from './hints.js';
 
 export function registerAthleteTools(server: McpServer): void {
   server.registerTool(
@@ -19,6 +20,7 @@ export function registerAthleteTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
+      _meta: schoolMeta('lookup', { aliases: ['player', 'athlete', 'career stats'] }),
       inputSchema: z.object({
         athlete: z
           .string()

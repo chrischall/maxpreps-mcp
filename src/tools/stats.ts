@@ -4,6 +4,7 @@ import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { buildTeamPath } from '../paths.js';
 import { teamArg, seasonArg } from './team.js';
+import { schoolMeta } from './hints.js';
 
 export function registerStatsTools(server: McpServer): void {
   server.registerTool(
@@ -20,6 +21,7 @@ export function registerStatsTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
+      _meta: schoolMeta('lookup', { aliases: ['stats', 'team leaders', 'top scorer'] }),
       inputSchema: z.object({
         team: teamArg,
         season: seasonArg,

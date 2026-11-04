@@ -5,6 +5,7 @@ import { client } from '../client.js';
 import { buildTeamPath } from '../paths.js';
 import { decodeSchedule } from '../decode.js';
 import { teamArg, seasonArg } from './team.js';
+import { schoolMeta } from './hints.js';
 
 export function registerScheduleTools(server: McpServer): void {
   server.registerTool(
@@ -23,6 +24,7 @@ export function registerScheduleTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
+      _meta: schoolMeta('lookup', { aliases: ['game', 'games', 'score', 'scores', 'schedule', 'next game', 'last game'] }),
       inputSchema: z.object({
         team: teamArg,
         season: seasonArg,
