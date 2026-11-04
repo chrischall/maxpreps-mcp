@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/server';
 import { minifiedResult, toolAnnotations } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
+import { schoolMeta } from './hints.js';
 
 interface SearchProps extends Record<string, unknown> {
   initialSchoolResults?: unknown[] | null;
@@ -24,6 +25,7 @@ export function registerSearchTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
+      _meta: schoolMeta('lookup', { aliases: ['high school', 'find a school', 'athlete'] }),
       inputSchema: z.object({
         query: z.string().min(1).describe('School or athlete name, e.g. "myers park" or "brody keefe"'),
         limit: z.number().int().positive().max(100).default(25).describe('Max results per category'),

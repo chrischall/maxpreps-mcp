@@ -5,6 +5,7 @@ import { client } from '../client.js';
 import { buildTeamPath } from '../paths.js';
 import { decodeRoster } from '../decode.js';
 import { teamArg, seasonArg } from './team.js';
+import { schoolMeta } from './hints.js';
 
 export function registerRosterTools(server: McpServer): void {
   server.registerTool(
@@ -22,6 +23,7 @@ export function registerRosterTools(server: McpServer): void {
         idempotent: true,
         openWorld: true,
       }),
+      _meta: schoolMeta('lookup', { aliases: ['roster', 'players', 'jersey number'] }),
       inputSchema: z.object({
         team: teamArg,
         season: seasonArg,
