@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.1](https://github.com/chrischall/maxpreps-mcp/compare/v1.2.0...v1.2.1) (2026-11-21)
+
+
+### Bug Fixes
+
+* **deps:** bump @chrischall/mcp-utils ([#114](https://github.com/chrischall/maxpreps-mcp/issues/114)) ([9e3382a](https://github.com/chrischall/maxpreps-mcp/commit/9e3382a1d1b55bff7930fec0cfc0353737895b79))
+* **deps:** bump @chrischall/mcp-utils ([#118](https://github.com/chrischall/maxpreps-mcp/issues/118)) ([72ec1f7](https://github.com/chrischall/maxpreps-mcp/commit/72ec1f733801ee72d328ac78abae49c161e6d31b))
+* **deps:** bump the production-dependencies group with 2 updates ([#116](https://github.com/chrischall/maxpreps-mcp/issues/116)) ([c8bc045](https://github.com/chrischall/maxpreps-mcp/commit/c8bc045d5edfe9599e1a900a2c5e32fd262dacbd))
+
 ## [1.2.0](https://github.com/chrischall/maxpreps-mcp/compare/v1.1.9...v1.2.0) (2026-11-04)
 
 
